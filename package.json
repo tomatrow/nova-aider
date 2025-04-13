@@ -1,0 +1,18 @@
+{
+	"name": "nano-eslint",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"type": "module",
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@9.14.4",
+	"devDependencies": {
+		"@types/nova-editor": "^1.0.3",
+		"eslint": "^9.22.0",
+		"eslint-plugin-nova": "^1.7.0",
+		"prettier": "^3.5.3",
+		"typescript": "^5.8.2"
+	}
+}

@@ -1,18 +1,18 @@
 {
-  "identifier": "com.example.print-to-console",
-  "name": "Print to Console",
-  "organization": "Your Name",
-  "description": "Prints the currently selected text to the console",
-  "version": "1.0",
-  "categories": ["commands"],
-  "main": "main.js",
-  "commands": {
-    "editor": [
-      {
-        "title": "Print to Console",
-        "command": "printToConsole",
-        "shortcut": "cmd-shift-p"
-      }
-    ]
-  }
+	"identifier": "com.example.print-to-console",
+	"name": "Print to Console",
+	"organization": "Your Name",
+	"description": "Prints the currently selected text to the console",
+	"version": "1.0",
+	"categories": ["commands"],
+	"main": "main.js",
+	"commands": {
+		"editor": [
+			{
+				"title": "Print to Console",
+				"command": "printToConsole",
+				"shortcut": "cmd-shift-l"
+			}
+		]
+	}
 }
