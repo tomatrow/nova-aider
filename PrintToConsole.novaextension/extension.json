@@ -4,7 +4,7 @@
 	"organization": "Your Name",
 	"description": "Prints the currently selected text to the console",
 	"version": "1.0",
-	"categories": ["commands"],
+	"categories": ["commands", "sidebars"],
 	"main": "main.js",
 	"commands": {
 		"editor": [
@@ -12,7 +12,23 @@
 				"title": "Print to Console",
 				"command": "printToConsole",
 				"shortcut": "cmd-shift-l"
+			},
+			{
+				"title": "Ask AI",
+				"command": "askAI"
 			}
 		]
-	}
+	},
+	"sidebars": [
+		{
+			"id": "askSidebar",
+			"name": "Ask AI",
+			"sections": [
+				{
+					"id": "ask",
+					"name": "Ask"
+				}
+			]
+		}
+	]
 }
