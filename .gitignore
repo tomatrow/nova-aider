@@ -2,3 +2,9 @@
 node_modules
 .aider*
 .env
+dist
+Aider.novaextension/Scripts/*
+Aider.novaextension/server/.python-version
+Aider.novaextension/server/__pycache__
+log.md
+.nova/Configuration.json
