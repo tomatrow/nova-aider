@@ -16,13 +16,12 @@ def run_command():
         data = request.get_json()
         if not data or 'message' not in data:
             return jsonify({"error": "Invalid request, 'message' field required"}), 400
-        
         message = data['message']
         
         # Process the message with Aider
         response = coder.run(message)
         
-        return jsonify({"response": response}), 200
+        return jsonify({ "message": message }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
