@@ -20,9 +20,7 @@ def run_command():
         message = data['message']
         
         # Process the message with Aider
-        # This is a simple implementation - you might need to adapt how messages
-        # are sent to the coder based on Aider's API
-        response = coder.io.send_msg(message)
+        response = coder.run(message)
         
         return jsonify({"response": response}), 200
     except Exception as e:
