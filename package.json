@@ -1,18 +1,28 @@
 {
-	"name": "nano-eslint",
+	"name": "aider-composer-nova",
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.js",
 	"type": "module",
 	"keywords": [],
-	"author": "",
-	"license": "ISC",
+	"author": "AJ Caldwell",
 	"packageManager": "pnpm@9.14.4",
+	"scripts": {
+		"build": "vite build",
+		"build:watch": "vite build --watch",
+		"aider": "aider --dark-mode --watch --model anthropic/claude-3-7-sonnet-20250219 --thinking-tokens 32k"
+	},
 	"devDependencies": {
+		"@types/node": "^22.14.1",
 		"@types/nova-editor": "^1.0.3",
+		"@types/polka": "^0.5.7",
 		"eslint": "^9.22.0",
 		"eslint-plugin-nova": "^1.7.0",
 		"prettier": "^3.5.3",
-		"typescript": "^5.8.2"
+		"typescript": "^5.8.2",
+		"vite": "^6.2.6"
+	},
+	"dependencies": {
+		"polka": "^0.5.2"
 	}
 }

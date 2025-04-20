@@ -8,3 +8,4 @@ Aider.novaextension/server/.python-version
 Aider.novaextension/server/__pycache__
 log.md
 .nova/Configuration.json
+__pycache__

@@ -1,0 +1,99 @@
+{
+	"identifier": "dev.ajcaldwell.aider",
+	"name": "Aider",
+	"organization": "AJ Caldwell",
+	"description": "Aider",
+	"version": "1.0",
+	"categories": ["commands", "sidebars"],
+	"main": "main.js",
+	"entitlements": {
+		"clipboard": true,
+		"process": true,
+		"requests": true,
+		"filesystem": "readwrite"
+	},
+	"commands": {
+		"editor": [
+			{
+				"title": "chat",
+				"command": "dev.ajcaldwell.aider.chat"
+			},
+			{
+				"title": "/ask",
+				"command": "dev.ajcaldwell.aider.ask_mode"
+			},
+			{
+				"title": "/edit",
+				"command": "dev.ajcaldwell.aider.edit_mode"
+			},
+			{
+				"title": "/architect",
+				"command": "dev.ajcaldwell.aider.architect_mode"
+			},
+			{
+				"title": "/add_file_context",
+				"command": "dev.ajcaldwell.aider.add_file_context"
+			},
+			{
+				"title": "/add_web_context",
+				"command": "dev.ajcaldwell.aider.add_web_context"
+			},
+			{
+				"title": "/add_snippet_context",
+				"command": "dev.ajcaldwell.aider.add_snippet_context"
+			}
+		]
+	},
+	"sidebars": [
+		{
+			"id": "dev.ajcaldwell.aider.sidebar",
+			"name": "Aider",
+			"sections": [
+				{
+					"id": "dev.ajcaldwell.aider.sidebar.chat",
+					"name": "Chat",
+					"placeholderText": "Aidter chat",
+					"headerCommands": [
+						{
+							"title": "/ask",
+							"image": "__builtin.path",
+							"command": "dev.ajcaldwell.aider.ask_mode"
+						},
+						{
+							"title": "/architect",
+							"image": "__builtin.branch",
+							"command": "dev.ajcaldwell.aider.architect_mode"
+						},
+						{
+							"title": "/edit",
+							"image": "__builtin.next",
+							"command": "dev.ajcaldwell.aider.edit_mode"
+						}
+					]
+				},
+				{
+					"id": "dev.ajcaldwell.aider.sidebar.context",
+					"name": "Context",
+					"placeholderText": "Aider context",
+					"headerCommands": [
+						{
+							"title": "Add file",
+							"image": "__builtin.add",
+							"command": "dev.ajcaldwell.aider.add_file_context"
+						},
+						{
+							"title": "Add web page",
+							"image": "__builtin.remote",
+							"command": "dev.ajcaldwell.aider.add_web_context"
+						},
+						{
+							"title": "Add snippet",
+							"image": "__builtin.refresh",
+							"command": "dev.ajcaldwell.aider.add_snippet_context"
+						}
+					]
+				}
+			]
+		}
+	]
+}
