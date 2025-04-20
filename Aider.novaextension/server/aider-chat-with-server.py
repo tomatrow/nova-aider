@@ -25,6 +25,14 @@ def run_command():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/context', methods=["GET"])
+def get_context():
+	try:
+		# AI: coder.abs_fnames is a python set. I'm trying to jsonify it. Make it suitable AI!
+		return jsonify({ "abs_fnames": coder.abs_fnames }), 200
+	except Exception as e:
+		return jsonify({"error": str(e)}), 500
+
 def run_flask_server():
     app.run(host='127.0.0.1', port=5000, debug=False)
 
