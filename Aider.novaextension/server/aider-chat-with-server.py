@@ -4,6 +4,9 @@ from aider.main import main
 
 coder = main(return_coder=True)
 
+# AI: Add a flask server here 
+# only one route: POST `/api/run` that accepts json with shape `{ message: string }` AI!
+
 while True:
 	try:
 		# coder.ok_to_warm_cache = bool(args.cache_keepalive_pings)
