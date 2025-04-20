@@ -1,22 +1,25 @@
 from aider.commands import SwitchCoder
 from aider.coders import Coder
 from aider.main import main
-import threading
 from flask import Flask, request, jsonify
+import threading
 import json
 
 coder = main(return_coder=True)
 app = Flask(__name__)
 
-@app.route('/api/coder', methods=["GET"])
 def get_coder_state():
+	return { "abs_fnames": list(coder.abs_fnames) }
+
+@app.route('/api/coder', methods=["GET"])
+def api_coder_get():
 	try:
-		return jsonify({ "abs_fnames": list(coder.abs_fnames) }), 200
+		return jsonify({ "coder": get_coder_state() }), 200
 	except Exception as e:
 		return jsonify({"error": str(e)}), 500
 
 @app.route('/api/coder', methods=['POST'])
-def run_coder_command():
+def api_coder_post():
     try:
         data = request.get_json()
         if not data or 'message' not in data:
@@ -24,9 +27,9 @@ def run_coder_command():
         message = data['message']
         
         # Process the message with Aider
-        response = coder.run(message)
+        coder.run(message)
         
-        return jsonify({ "message": message }), 200
+        return jsonify({ "message": message, "coder": get_coder_state() }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
