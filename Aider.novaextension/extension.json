@@ -31,15 +31,15 @@
 				"command": "dev.ajcaldwell.aider.architect_mode"
 			},
 			{
-				"title": "/add_file_context",
+				"title": "/add file context",
 				"command": "dev.ajcaldwell.aider.add_file_context"
 			},
 			{
-				"title": "/add_web_context",
+				"title": "/add web context",
 				"command": "dev.ajcaldwell.aider.add_web_context"
 			},
 			{
-				"title": "/add_snippet_context",
+				"title": "/add snippet context",
 				"command": "dev.ajcaldwell.aider.add_snippet_context"
 			}
 		]
@@ -52,7 +52,7 @@
 				{
 					"id": "dev.ajcaldwell.aider.sidebar.chat",
 					"name": "Chat",
-					"placeholderText": "Aidter chat",
+					"placeholderText": "Aider chat",
 					"headerCommands": [
 						{
 							"title": "/ask",

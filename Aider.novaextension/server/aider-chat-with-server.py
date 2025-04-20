@@ -9,7 +9,11 @@ coder = main(return_coder=True)
 app = Flask(__name__)
 
 def get_coder_state():
-	return { "abs_fnames": list(coder.abs_fnames) }
+	return { 
+		"abs_fnames": list(coder.abs_fnames),
+		"abs_read_only_fnames": list(coder.abs_read_only_fnames),
+		"edit_format": coder.edit_format
+	}
 
 @app.route('/api/coder', methods=["GET"])
 def api_coder_get():

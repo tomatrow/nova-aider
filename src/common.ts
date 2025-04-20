@@ -12,36 +12,15 @@ export type ChatReferenceSnippetItem = {
 	type: "snippet"
 	name: string
 	content: string
-	language?: string
 	path: string
+	language?: string
 }
 
 export type ChatReferenceItem = ChatReferenceFileItem | ChatReferenceSnippetItem
 
-export type ChatType = "ask" | "code" | "architect"
-
-export const DiffFormats = {
-	Diff: "diff",
-	DiffFenced: "diff-fenced",
-	UDiff: "udiff",
-	Whole: "whole"
-} as const
-
-export type DiffFormat = (typeof DiffFormats)[keyof typeof DiffFormats]
-
-export type ServerChatPayload = {
-	chat_type: ChatType
-	diff_format: DiffFormat
-	message: string
-	reference_list: { fs_path: string; readonly: boolean }[]
-}
-
-export type ChatReferenceItemWithReadOnly = ChatReferenceItem & { readonly?: boolean }
-export type ChatFileItemWithReadOnly = ChatReferenceFileItem & { readonly?: boolean }
-
-export function formatCurrentChatMessage(
+export function buildChatMessaage(
 	message: string,
-	options: { chatReferenceList?: ChatReferenceItemWithReadOnly[] }
+	options: { chatReferenceList?: ChatReferenceItem[] }
 ) {
 	let reference = ""
 	if (options.chatReferenceList?.length) {

@@ -1,5 +1,3 @@
-import { AiderChatService } from "./aiderChatService"
-
 class LinesProvider implements TreeDataProvider<string> {
 	static lines: string[] = [
 		"[AiderChatSrvice.start] stdout line I'm unable to determine the type of project without any specific details or context about the code or files involved. If you can provide some information about the structure, key files, or snippets of code, I can help identify the type of project or its purpose.",
@@ -64,7 +62,7 @@ class LinesProvider implements TreeDataProvider<string> {
 }
 
 const NOVA_AIDER_POLKA_PORT = 3000
-let aiderChatService: AiderChatService | undefined
+// let aiderChatService: AiderChatService | undefined
 
 export function activate() {
 	console.log("[activate]")
@@ -116,16 +114,16 @@ export function activate() {
 
 	nova.commands.register("dev.ajcaldwell.aider.chat", () => {
 		console.log("dev.ajcaldwell.aider.chat")
-		aiderChatService = new AiderChatService()
-		console.log({ AiderChatService })
-		aiderChatService.start()
+		// aiderChatService = new AiderChatService()
+		// console.log({ AiderChatService })
+		// aiderChatService.start()
 	})
 }
 
 export function deactivate() {
 	console.log("[deactivate]")
 
-	aiderChatService?.stop()
+	// aiderChatService?.stop()
 }
 
 nova.assistants.registerTaskAssistant(
