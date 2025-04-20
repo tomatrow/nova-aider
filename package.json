@@ -10,7 +10,8 @@
 	"scripts": {
 		"build": "vite build",
 		"build:watch": "vite build --watch",
-		"aider": "aider --dark-mode --watch --model anthropic/claude-3-7-sonnet-20250219 --thinking-tokens 32k"
+		"aider": "aider --dark-mode --watch --model anthropic/claude-3-7-sonnet-20250219 --thinking-tokens 32k",
+		"start-nova-aider-server": "python Aider.novaextension/server/aider-chat-with-server.py"
 	},
 	"devDependencies": {
 		"@types/node": "^22.14.1",
