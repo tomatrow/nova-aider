@@ -1,7 +1,7 @@
 #! /usr/bin/env npx tsx
 
 async function runCommand(message: string): Promise<{ message: string }> {
-	const response = await fetch("http://127.0.0.1:5000/api/run", {
+	const response = await fetch("http://127.0.0.1:5000/api/coder", {
 		method: "POST",
 		body: JSON.stringify({ message }),
 		headers: { "Content-Type": "application/json" }
@@ -10,8 +10,8 @@ async function runCommand(message: string): Promise<{ message: string }> {
 	return await response.json()
 }
 
-async function getContextFiles(): Promise<{ abs_fnames: string[] }> {
-	const response = await fetch("http://127.0.0.1:5000/api/context")
+async function getCoderState(): Promise<{ abs_fnames: string[] }> {
+	const response = await fetch("http://127.0.0.1:5000/api/coder")
 	return await response.json()
 }
 

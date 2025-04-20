@@ -6,12 +6,17 @@ from flask import Flask, request, jsonify
 import json
 
 coder = main(return_coder=True)
-
-# Start Flask server
 app = Flask(__name__)
 
-@app.route('/api/run', methods=['POST'])
-def run_command():
+@app.route('/api/coder', methods=["GET"])
+def get_coder_state():
+	try:
+		return jsonify({ "abs_fnames": list(coder.abs_fnames) }), 200
+	except Exception as e:
+		return jsonify({"error": str(e)}), 500
+
+@app.route('/api/coder', methods=['POST'])
+def run_coder_command():
     try:
         data = request.get_json()
         if not data or 'message' not in data:
@@ -24,13 +29,6 @@ def run_command():
         return jsonify({ "message": message }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-@app.route('/api/context', methods=["GET"])
-def get_context():
-	try:
-		return jsonify({ "abs_fnames": list(coder.abs_fnames) }), 200
-	except Exception as e:
-		return jsonify({"error": str(e)}), 500
 
 def run_flask_server():
     app.run(host='127.0.0.1', port=5000, debug=False)
