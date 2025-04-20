@@ -28,8 +28,7 @@ def run_command():
 @app.route('/api/context', methods=["GET"])
 def get_context():
 	try:
-		# AI: coder.abs_fnames is a python set. I'm trying to jsonify it. Make it suitable AI!
-		return jsonify({ "abs_fnames": coder.abs_fnames }), 200
+		return jsonify({ "abs_fnames": list(coder.abs_fnames) }), 200
 	except Exception as e:
 		return jsonify({"error": str(e)}), 500
 
