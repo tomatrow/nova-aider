@@ -6,19 +6,19 @@ export interface AiderCoderState {
 }
 
 export class AiderCoderClient {
-	base: string
+	_base: string
 	_coder?: AiderCoderState
 
 	constructor({
 		base = "http://127.0.0.1:5000",
 		coder
 	}: { base?: string; coder?: AiderCoderState } = {}) {
-		this.base = base
+		this._base = base
 		this._coder = coder
 	}
 
 	async _fetchState() {
-		const response = await fetch(`${this.base}/api/coder`)
+		const response = await fetch(`${this._base}/api/coder`)
 		const coderState: { coder: AiderCoderState } = await response.json()
 		return coderState
 	}
@@ -32,7 +32,7 @@ export class AiderCoderClient {
 	}
 
 	async run(message: string) {
-		const response = await fetch(`${this.base}/api/coder`, {
+		const response = await fetch(`${this._base}/api/coder`, {
 			method: "POST",
 			body: JSON.stringify({ message }),
 			headers: { "Content-Type": "application/json" }
@@ -51,7 +51,7 @@ export class AiderCoderClient {
 	async read(files: string[]) {
 		if (!files.length) throw new Error("Empty files list")
 
-		return await this.run(`/read-only ${files.join(" ")}`)
+		return await this.run(`/read ${files.join(" ")}`)
 	}
 
 	async add(files: string[]) {
@@ -62,6 +62,10 @@ export class AiderCoderClient {
 
 	async drop(files: string[]) {
 		return await this.run(`/drop ${files.join(" ")}`)
+	}
+
+	get base() {
+		return this._base
 	}
 
 	get coder() {
