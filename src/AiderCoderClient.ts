@@ -1,5 +1,3 @@
-export type ChatType = "ask" | "code" | "architect"
-
 export interface AiderCoderState {
 	/** filenames in the editable context */
 	abs_fnames: string[]
@@ -21,18 +19,11 @@ export class AiderCoderClient {
 		this._coder = coder
 	}
 
-	async _fetchState() {
+	async refresh() {
 		const response = await fetch(`${this._base}/api/coder`)
 		const coderState: { coder: AiderCoderState } = await response.json()
+		this._coder = coderState.coder
 		return coderState
-	}
-
-	async refreshState() {
-		const responseJSON = await this._fetchState()
-
-		this._coder = responseJSON.coder
-
-		return responseJSON
 	}
 
 	async run(message: string) {
