@@ -27,20 +27,31 @@ export class AiderCoderClient {
 	}
 
 	async run(message: string) {
-		const response = await fetch(`${this._base}/api/coder`, {
-			method: "POST",
-			body: JSON.stringify({ message }),
-			headers: { "Content-Type": "application/json" }
-		})
+		try {
+			console.log("[AiderCoderClient.run]", "message", message)
 
-		const responseJSON: {
-			message: string
-			coder: AiderCoderState
-		} = await response.json()
+			const response = await fetch(`${this._base}/api/coder`, {
+				method: "POST",
+				body: JSON.stringify({ message }),
+				headers: { "Content-Type": "application/json" }
+			})
 
-		this._coder = responseJSON.coder
+			const responseText = await response.text()
+			console.log("[AiderCoderClient.run]", "responseText", responseText)
 
-		return responseJSON
+			const responseJSON: {
+				message: string
+				coder: AiderCoderState
+			} = JSON.parse(responseText)
+			console.log("[AiderCoderClient.run]", "responseJSON", responseJSON)
+
+			this._coder = responseJSON.coder
+
+			return responseJSON
+		} catch (error) {
+			console.error(error)
+			throw error
+		}
 	}
 
 	async read(files: string[]) {
