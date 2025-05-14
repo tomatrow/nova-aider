@@ -5,6 +5,7 @@ from flask import Flask, request, jsonify
 import threading
 import logging
 import json
+import traceback
 
 class AiderServer:
     def __init__(self):
@@ -23,37 +24,21 @@ class AiderServer:
             "edit_format": self.coder.edit_format
         }
 
-    def run_coder(self, message=None): 
-        try:
-            if message is not None:
-                self.coder.io.tool_output()
-                self.coder.io.tool_output(f"Nova: {message}", bold=True) 
-
-            self.coder.run(message)
-            return
-        except SwitchCoder as switch:
-            self.coder.ok_to_warm_cache = False
-            io = self.coder.io
-        
-            # Set the placeholder if provided
-            if hasattr(switch, "placeholder") and switch.placeholder is not None:
-                io.placeholder = switch.placeholder
-        
-            kwargs = dict(io=io, from_coder=self.coder)
-            kwargs.update(switch.kwargs)
-            if "show_announcements" in kwargs:
-                del kwargs["show_announcements"]
-        
-            self.coder = Coder.create(**kwargs)
-        
-            if switch.kwargs.get("show_announcements") is not False:
-                self.coder.show_announcements()
-
     def api_coder_get(self):
         try:
             return jsonify({ "coder": self.get_coder_state() }), 200
         except Exception as e:
+            traceback.print_exc()
             return jsonify({"error": str(e)}), 500
+    
+    def run(self, message):
+        try:
+            self.coder.run_one(message, True)
+        except SwitchCoder as switch:
+            io = self.coder.io
+            kwargs = dict(io=io, from_coder=self.coder)
+            kwargs.update(switch.kwargs)
+            self.coder = Coder.create(**kwargs)
 
     def api_coder_post(self):
         try:
@@ -61,12 +46,13 @@ class AiderServer:
             if not data or 'message' not in data:
                 return jsonify({"error": "Invalid request, 'message' field required"}), 400
             message = data['message']
-            
-            # Process the message with Aider
-            self.run_coder(message)
-            
+
+            self.coder.io.interrupt_input()
+            self.run(message)
+
             return jsonify({ "message": message, "coder": self.get_coder_state() }), 200
         except Exception as e:
+            traceback.print_exc()
             return jsonify({ "error": str(e)}), 500
 
     def run_flask_server(self):
@@ -84,7 +70,8 @@ class AiderServer:
         
         # Main Aider loop
         while True:
-            self.run_coder()
+            message = self.coder.get_input()
+            self.run(message)
 
 # Create and run server
 server = AiderServer()
