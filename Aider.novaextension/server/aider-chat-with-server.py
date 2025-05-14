@@ -68,7 +68,7 @@ def api_coder_post():
         
         return jsonify({ "message": message, "coder": get_coder_state() }), 200
     except Exception as e:
-        return jsonify({ "error": jsonify(e) }), 500
+        return jsonify({ "error": str(e) }), 500
 
 def run_flask_server():
     # Disable Werkzeug's default logging
