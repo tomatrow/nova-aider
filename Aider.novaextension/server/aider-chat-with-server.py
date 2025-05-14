@@ -6,82 +6,86 @@ import threading
 import logging
 import json
 
-coder = main(return_coder=True)
-app = Flask(__name__)
+class AiderServer:
+    def __init__(self):
+        self.coder = main(return_coder=True)
+        self.app = Flask(__name__)
+        self.setup_routes()
 
-def get_coder_state():
-	global coder
+    def setup_routes(self):
+        self.app.route('/api/coder', methods=["GET"])(self.api_coder_get)
+        self.app.route('/api/coder', methods=['POST'])(self.api_coder_post)
 
-	return { 
-		"abs_fnames": list(coder.abs_fnames),
-		"abs_read_only_fnames": list(coder.abs_read_only_fnames),
-		"edit_format": coder.edit_format
-	}
+    def get_coder_state(self):
+        return { 
+            "abs_fnames": list(self.coder.abs_fnames),
+            "abs_read_only_fnames": list(self.coder.abs_read_only_fnames),
+            "edit_format": self.coder.edit_format
+        }
 
-def run(message=None): 
-	global coder
-	
-	try:
-		# coder.ok_to_warm_cache = bool(args.cache_keepalive_pings)
-		if message is not None:
-			coder.io.tool_output()
-			coder.io.tool_output(f"Nova: {message}", bold=True) 
+    def run_coder(self, message=None): 
+        try:
+            if message is not None:
+                self.coder.io.tool_output()
+                self.coder.io.tool_output(f"Nova: {message}", bold=True) 
 
-		coder.run(message)
-
-		return
-	except SwitchCoder as switch:
-		coder.ok_to_warm_cache = False
-		io = coder.io
-	
-		# Set the placeholder if provided
-		if hasattr(switch, "placeholder") and switch.placeholder is not None:
-			io.placeholder = switch.placeholder
-	
-		kwargs = dict(io=io, from_coder=coder)
-		kwargs.update(switch.kwargs)
-		if "show_announcements" in kwargs:
-			del kwargs["show_announcements"]
-	
-		coder = Coder.create(**kwargs)
-	
-		if switch.kwargs.get("show_announcements") is not False:
-			coder.show_announcements()
-
-@app.route('/api/coder', methods=["GET"])
-def api_coder_get():
-	try:
-		return jsonify({ "coder": get_coder_state() }), 200
-	except Exception as e:
-		return jsonify({"error": str(e)}), 500
-
-@app.route('/api/coder', methods=['POST'])
-def api_coder_post():
-    try:
-        data = request.get_json()
-        if not data or 'message' not in data:
-            return jsonify({"error": "Invalid request, 'message' field required"}), 400
-        message = data['message']
+            self.coder.run(message)
+            return
+        except SwitchCoder as switch:
+            self.coder.ok_to_warm_cache = False
+            io = self.coder.io
         
-        # Process the message with Aider
-        run(message)
+            # Set the placeholder if provided
+            if hasattr(switch, "placeholder") and switch.placeholder is not None:
+                io.placeholder = switch.placeholder
         
-        return jsonify({ "message": message, "coder": get_coder_state() }), 200
-    except Exception as e:
-        return jsonify({ "error": str(e) }), 500
+            kwargs = dict(io=io, from_coder=self.coder)
+            kwargs.update(switch.kwargs)
+            if "show_announcements" in kwargs:
+                del kwargs["show_announcements"]
+        
+            self.coder = Coder.create(**kwargs)
+        
+            if switch.kwargs.get("show_announcements") is not False:
+                self.coder.show_announcements()
 
-def run_flask_server():
-    # Disable Werkzeug's default logging
-    log = logging.getLogger('werkzeug')
-    log.setLevel(logging.ERROR)
+    def api_coder_get(self):
+        try:
+            return jsonify({ "coder": self.get_coder_state() }), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
-    app.run(host='127.0.0.1', port=5000, debug=False)
-    app.logger.setLevel(logging.ERROR)
+    def api_coder_post(self):
+        try:
+            data = request.get_json()
+            if not data or 'message' not in data:
+                return jsonify({"error": "Invalid request, 'message' field required"}), 400
+            message = data['message']
+            
+            # Process the message with Aider
+            self.run_coder(message)
+            
+            return jsonify({ "message": message, "coder": self.get_coder_state() }), 200
+        except Exception as e:
+            return jsonify({ "error": str(e)}), 500
 
-# Start the Flask server in a separate thread
-flask_thread = threading.Thread(target=run_flask_server, daemon=True)
-flask_thread.start()
+    def run_flask_server(self):
+        # Disable Werkzeug's default logging
+        log = logging.getLogger('werkzeug')
+        log.setLevel(logging.ERROR)
 
-# Main Aider loop
-while True:
-    run()
+        self.app.run(host='127.0.0.1', port=5000, debug=False)
+        self.app.logger.setLevel(logging.ERROR)
+
+    def start(self):
+        # Start the Flask server in a separate thread
+        flask_thread = threading.Thread(target=self.run_flask_server, daemon=True)
+        flask_thread.start()
+        
+        # Main Aider loop
+        while True:
+            self.run_coder()
+
+# Create and run server
+server = AiderServer()
+server.start()
