@@ -11,7 +11,7 @@
 		"build": "vite build",
 		"build:watch": "vite build --watch",
 		"aider": "aider --dark-mode --watch --model anthropic/claude-3-7-sonnet-20250219 --thinking-tokens 32k",
-		"start-nova-aider-server": "python Aider.novaextension/server/aider-chat-with-server.py"
+		"start-nova-aider-server": "uv run --python python3.12 --with aider-chat --with flask Aider.novaextension/server/aider-chat-with-server.py"
 	},
 	"devDependencies": {
 		"@types/node": "^22.14.1",

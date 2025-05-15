@@ -15,32 +15,8 @@
 	"commands": {
 		"editor": [
 			{
-				"title": "chat",
-				"command": "dev.ajcaldwell.aider.chat"
-			},
-			{
-				"title": "/ask",
-				"command": "dev.ajcaldwell.aider.ask_mode"
-			},
-			{
-				"title": "/edit",
-				"command": "dev.ajcaldwell.aider.edit_mode"
-			},
-			{
-				"title": "/architect",
-				"command": "dev.ajcaldwell.aider.architect_mode"
-			},
-			{
-				"title": "/add file context",
-				"command": "dev.ajcaldwell.aider.add_file_context"
-			},
-			{
-				"title": "/add web context",
-				"command": "dev.ajcaldwell.aider.add_web_context"
-			},
-			{
-				"title": "/add snippet context",
-				"command": "dev.ajcaldwell.aider.add_snippet_context"
+				"title": "run",
+				"command": "dev.ajcaldwell.aider.run"
 			}
 		]
 	},
@@ -48,48 +24,18 @@
 		{
 			"id": "dev.ajcaldwell.aider.sidebar",
 			"name": "Aider",
+			"smallImage": "SidebarSmall",
+			"largeImage": "SidebarLarge",
 			"sections": [
 				{
-					"id": "dev.ajcaldwell.aider.sidebar.chat",
-					"name": "Chat",
-					"placeholderText": "Aider chat",
-					"headerCommands": [
-						{
-							"title": "/ask",
-							"image": "__builtin.path",
-							"command": "dev.ajcaldwell.aider.ask_mode"
-						},
-						{
-							"title": "/architect",
-							"image": "__builtin.branch",
-							"command": "dev.ajcaldwell.aider.architect_mode"
-						},
-						{
-							"title": "/edit",
-							"image": "__builtin.next",
-							"command": "dev.ajcaldwell.aider.edit_mode"
-						}
-					]
-				},
-				{
 					"id": "dev.ajcaldwell.aider.sidebar.context",
-					"name": "Context",
-					"placeholderText": "Aider context",
+					"name": "Aider Context",
+					"placeholderText": "Aider Context",
 					"headerCommands": [
 						{
-							"title": "Add file",
-							"image": "__builtin.add",
-							"command": "dev.ajcaldwell.aider.add_file_context"
-						},
-						{
-							"title": "Add web page",
-							"image": "__builtin.remote",
-							"command": "dev.ajcaldwell.aider.add_web_context"
-						},
-						{
-							"title": "Add snippet",
-							"image": "__builtin.refresh",
-							"command": "dev.ajcaldwell.aider.add_snippet_context"
+							"title": "Run",
+							"image": "__builtin.path",
+							"command": "dev.ajcaldwell.aider.run"
 						}
 					]
 				}

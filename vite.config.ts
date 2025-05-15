@@ -6,7 +6,7 @@ export default defineConfig(() => {
 		build: {
 			lib: {
 				name: "nova-aider",
-				entry: [resolve(__dirname, "src/main.ts"), resolve(__dirname, "src/polka.ts")],
+				entry: [resolve(__dirname, "src/main.ts")],
 				formats: ["cjs"],
 				fileName: (_, name) => name + ".js"
 			},
