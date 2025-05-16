@@ -7,9 +7,9 @@ async function main() {
 
 	const client = new AiderCoderClient()
 
-	const { coder } = await client.run(message)
+	const result = await client.run(message ?? "")
 
-	console.log(JSON.stringify({ coder }, null, 4))
+	console.log(JSON.stringify(result, null, 4))
 }
 
 main()
