@@ -26,7 +26,10 @@ class AiderServer:
 
     def api_coder_get(self):
         try:
-            return jsonify({ "coder": self.get_coder_state() }), 200
+            # need to run this on the main thread
+            coder_state = self.get_coder_state()
+            
+            return jsonify({ "coder": coder_state }), 200
         except Exception as e:
             traceback.print_exc()
             return jsonify({"error": str(e)}), 500
@@ -47,13 +50,15 @@ class AiderServer:
                 return jsonify({"error": "Invalid request, 'message' field required"}), 400
             message = data['message']
 
+            # need to run this on the main thread
             self.coder.io.interrupt_input()
             self.run(message)
+            coder_state = self.get_coder_state()
 
-            return jsonify({ "message": message, "coder": self.get_coder_state() }), 200
+            return jsonify({ "message": message, "coder": coder_state }), 200
         except Exception as e:
             traceback.print_exc()
-            return jsonify({ "error": str(e)}), 500
+            return jsonify({ "error": str(e) }), 500
 
     def run_flask_server(self):
         # Disable Werkzeug's default logging
@@ -67,8 +72,7 @@ class AiderServer:
         # Start the Flask server in a separate thread
         flask_thread = threading.Thread(target=self.run_flask_server, daemon=True)
         flask_thread.start()
-        
-        # Main Aider loop
+
         while True:
             message = self.coder.get_input()
             self.run(message)
