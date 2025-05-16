@@ -57,11 +57,11 @@ class AiderServer:
 
     def run_flask_server(self):
         # Disable Werkzeug's default logging
-        log = logging.getLogger('werkzeug')
-        log.setLevel(logging.ERROR)
+        # log = logging.getLogger('werkzeug')
+        # log.setLevel(logging.ERROR)
 
         self.app.run(host='127.0.0.1', port=5000, debug=False)
-        self.app.logger.setLevel(logging.ERROR)
+        # self.app.logger.setLevel(logging.ERROR)
 
     def start(self):
         # Start the Flask server in a separate thread
