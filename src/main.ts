@@ -1,9 +1,16 @@
-import { AiderCoderClient } from "./AiderCoderClient"
-import { ContextTreeDataProvider } from "./ContextTreeDataProvider"
+import { console } from "inspector"
+import { AiderCoderClient, type AiderCoderState } from "./AiderCoderClient"
+import { ContextTreeDataProvider, type ContextTreeNode } from "./ContextTreeDataProvider"
 import { wrappedNodeFetch } from "./nova-utility"
 
 let aiderCoderClient: AiderCoderClient
 let contextTreeDataProvider: ContextTreeDataProvider
+let contextTreeView: TreeView<ContextTreeNode>
+
+async function sync(coder?: AiderCoderState) {
+	contextTreeDataProvider.update(coder)
+	await contextTreeView.reload()
+}
 
 export function activate() {
 	console.log("[activate]")
@@ -13,16 +20,18 @@ export function activate() {
 		fetch: wrappedNodeFetch as typeof fetch
 	})
 
-	const contextTreeView = new TreeView("dev.ajcaldwell.aider.sidebar.context", {
+	contextTreeView = new TreeView("dev.ajcaldwell.aider.sidebar.context", {
 		dataProvider: contextTreeDataProvider
 	})
 
-	aiderCoderClient.onChange = async coder => {
-		contextTreeDataProvider.update(coder)
-		await contextTreeView.reload()
-	}
+	aiderCoderClient.onChange = sync
+
+	const watcher = nova.fs.watch(".nova/aider/*", path => {
+		console.log({ path })
+	})
 
 	nova.subscriptions.add(contextTreeView)
+	nova.subscriptions.add(watcher)
 }
 
 nova.commands.register("dev.ajcaldwell.aider.run", () => {
