@@ -7,50 +7,55 @@ export interface AiderCoderState {
 	edit_format: "architect" | "ask" | "code" | "context" | "help"
 }
 
+type Fetch = typeof fetch
+
 export class AiderCoderClient {
 	_base: string
 	_coder?: AiderCoderState
+	_fetch: Fetch
+	onChange?(coder?: AiderCoderState): void
 
 	constructor({
 		base = "http://127.0.0.1:5000",
-		coder
-	}: { base?: string; coder?: AiderCoderState } = {}) {
+		coder,
+		fetch = globalThis.fetch
+	}: { base?: string; coder?: AiderCoderState; fetch?: Fetch } = {}) {
 		this._base = base
 		this._coder = coder
+		this._fetch = fetch
 	}
 
 	async refresh() {
-		const response = await fetch(`${this._base}/api/coder`)
-		const coderState: { coder: AiderCoderState } = await response.json()
-		this._coder = coderState.coder
-		return coderState
+		try {
+			const response = await this._fetch(`${this._base}/api/coder`)
+			const coderState: { coder: AiderCoderState } = await response.json()
+			this._coder = coderState.coder
+			this.onChange?.(this._coder)
+			return coderState
+		} catch (error) {
+			console.error(error)
+		}
 	}
 
 	async run(message: string) {
 		try {
-			console.log("[AiderCoderClient.run]", "message", message)
-
-			const response = await fetch(`${this._base}/api/coder`, {
+			const response = await this._fetch(`${this._base}/api/coder`, {
 				method: "POST",
 				body: JSON.stringify({ message }),
-				headers: { "Content-Type": "application/json" }
+				headers: { "Content-Type": "application/json", Accept: "application/json" }
 			})
-
-			const responseText = await response.text()
-			console.log("[AiderCoderClient.run]", "responseText", responseText)
 
 			const responseJSON: {
 				message: string
 				coder: AiderCoderState
-			} = JSON.parse(responseText)
-			console.log("[AiderCoderClient.run]", "responseJSON", responseJSON)
+			} = await response.json()
 
 			this._coder = responseJSON.coder
+			this.onChange?.(this._coder)
 
 			return responseJSON
 		} catch (error) {
-			console.error(error)
-			throw error
+			console.log(error)
 		}
 	}
 

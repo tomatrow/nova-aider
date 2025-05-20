@@ -1,8 +1,9 @@
 import { resolve } from "path"
-import { UserConfig, defineConfig } from "vite"
+import { type UserConfig, defineConfig } from "vite"
 
 export default defineConfig(() => {
 	const config: UserConfig = {
+		publicDir: "static",
 		build: {
 			lib: {
 				name: "nova-aider",
@@ -10,16 +11,13 @@ export default defineConfig(() => {
 				formats: ["cjs"],
 				fileName: (_, name) => name + ".js"
 			},
-			rollupOptions: {
-				external: ["http", "querystring"]
-			},
 			commonjsOptions: {
 				include: [/node_modules/]
 			},
 			outDir: "Aider.novaextension/Scripts",
 			minify: false
-		},
-		plugins: []
+		}
 	}
+
 	return config
 })

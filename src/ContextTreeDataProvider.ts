@@ -66,11 +66,13 @@ export class ContextTreeDataProvider implements TreeDataProvider<ContextTreeNode
 
 	update(coder?: AiderCoderState) {
 		this.graph = coder ? createContextTreeGraph(coder) : {}
-		console.log("[ContextTreeDataProvider.update]", JSON.stringify(this.graph))
 	}
 
 	getChildren(element: ContextTreeNode | null): ContextTreeNode[] {
-		if (!element) return [this.graph.root].filter(node => node !== undefined)
+		if (!element)
+			return [this.graph.editableList, this.graph.readonlyList].filter(
+				node => node !== undefined
+			)
 		return (
 			element.adjacencies
 				.map(adjacency => this.graph[adjacency.id])
