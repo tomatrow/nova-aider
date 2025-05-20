@@ -1,14 +1,14 @@
 import { type AiderCoderState } from "./AiderCoderClient"
 
-type ContextTreeNodeData =
+export type ContextTreeNodeData =
 	| { type: "ROOT" }
 	| { type: "READONLY_LIST" }
 	| { type: "READONLY_FILE"; absoluteFilePath: string }
 	| { type: "EDITABLE_LIST" }
 	| { type: "EDITABLE_FILE"; absoluteFilePath: string }
 
-type ContextTreeNode = ContextTreeNodeData & { id: string; adjacencies: { id: string }[] }
-type ContextTreeGraph = Record<string, ContextTreeNode>
+export type ContextTreeNode = ContextTreeNodeData & { id: string; adjacencies: { id: string }[] }
+export type ContextTreeGraph = Record<string, ContextTreeNode>
 
 function createContextTreeGraph(coder: AiderCoderState): ContextTreeGraph {
 	const nodes: ContextTreeNode[] = []
