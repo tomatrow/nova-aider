@@ -18,11 +18,18 @@ export class AiderCoderClient {
 	constructor({
 		base = "http://127.0.0.1:5000",
 		coder,
-		fetch = globalThis.fetch
-	}: { base?: string; coder?: AiderCoderState; fetch?: Fetch } = {}) {
+		fetch = globalThis.fetch,
+		onChange
+	}: {
+		base?: string
+		coder?: AiderCoderState
+		fetch?: Fetch
+		onChange?(coder?: AiderCoderState): void
+	} = {}) {
 		this._base = base
 		this._coder = coder
 		this._fetch = fetch
+		this.onChange = onChange
 	}
 
 	async refresh() {

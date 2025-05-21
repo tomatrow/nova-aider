@@ -11,31 +11,32 @@ async function sync(coder?: AiderCoderState) {
 	await contextTreeView.reload()
 }
 
-export function activate() {
-	console.log("[activate]")
-
-	contextTreeDataProvider = new ContextTreeDataProvider()
-	aiderCoderClient = new AiderCoderClient({
-		fetch: wrappedNodeFetch as typeof fetch
-	})
-
-	contextTreeView = new TreeView("dev.ajcaldwell.aider.sidebar.context", {
-		dataProvider: contextTreeDataProvider
-	})
-
-	aiderCoderClient.onChange = sync
-
-	const watcher = nova.fs.watch(".aider.nova.cache.v1/coder.json", path => {
+function watchCoderCache(onChange?: (coder: AiderCoderState) => void) {
+	return nova.fs.watch(".aider.nova.cache.v1/coder.json", path => {
 		try {
 			const file = nova.fs.open(path, "r", "utf8") as FileTextMode
 			const text = file.read()
 			if (!text) return
 			const coder: AiderCoderState = JSON.parse(text)
-			sync(coder)
+			onChange?.(coder)
 		} catch (error) {
 			console.error(error)
 		}
 	})
+}
+
+export function activate() {
+	console.log("[activate]")
+
+	contextTreeDataProvider = new ContextTreeDataProvider()
+	aiderCoderClient = new AiderCoderClient({
+		fetch: wrappedNodeFetch as typeof fetch,
+		onChange: sync
+	})
+	contextTreeView = new TreeView("dev.ajcaldwell.aider.sidebar.context", {
+		dataProvider: contextTreeDataProvider
+	})
+	const watcher = watchCoderCache(sync)
 
 	nova.subscriptions.add(contextTreeView)
 	nova.subscriptions.add(watcher)
