@@ -1,4 +1,3 @@
-import { console } from "inspector"
 import { AiderCoderClient, type AiderCoderState } from "./AiderCoderClient"
 import { ContextTreeDataProvider, type ContextTreeNode } from "./ContextTreeDataProvider"
 import { wrappedNodeFetch } from "./nova-utility"
@@ -26,8 +25,16 @@ export function activate() {
 
 	aiderCoderClient.onChange = sync
 
-	const watcher = nova.fs.watch(".nova/aider/*", path => {
-		console.log({ path })
+	const watcher = nova.fs.watch(".aider.nova.cache.v1/coder.json", path => {
+		try {
+			const file = nova.fs.open(path, "r", "utf8") as FileTextMode
+			const text = file.read()
+			if (!text) return
+			const coder: AiderCoderState = JSON.parse(text)
+			sync(coder)
+		} catch (error) {
+			console.error(error)
+		}
 	})
 
 	nova.subscriptions.add(contextTreeView)
