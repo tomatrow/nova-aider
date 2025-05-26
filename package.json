@@ -10,6 +10,7 @@
 	"scripts": {
 		"build": "vite build",
 		"build:watch": "vite build --watch",
+		"build:install": "fish -c 'pnpm run build; and open Aider.novaextension/'",
 		"aider": "aider --dark-mode --watch --model anthropic/claude-3-7-sonnet-20250219 --thinking-tokens 32k",
 		"start-nova-aider-server": "uv run --python python3.12 --with aider-chat --with flask Aider.novaextension/server/aider-chat-with-server.py"
 	},
