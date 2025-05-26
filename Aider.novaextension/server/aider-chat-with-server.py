@@ -67,28 +67,12 @@ class AiderServer:
             return jsonify({ "error": str(e) }), 500
 
     def run_flask_server(self):
-        # Create an array (list) of server configurations
-        server_configs = [
-            {'host': '127.0.0.1', 'port': 5000, 'debug': False},
-            {'host': 'localhost', 'port': 5000, 'debug': False},
-            {'host': '0.0.0.0', 'port': 5000, 'debug': False}  # Allow external connections
-        ]
-        
-        # Use the first configuration by default
-        config = server_configs[0]
-        
-        # Disable Werkzeug's default logging if needed
-        if not config['debug']:
-            log = logging.getLogger('werkzeug')
-            log.setLevel(logging.ERROR)
-            self.app.logger.setLevel(logging.ERROR)
-        
-        # Run the Flask server with the selected configuration
-        self.app.run(
-            host=config['host'], 
-            port=config['port'], 
-            debug=config['debug']
-        )
+        # Disable Werkzeug's default logging
+        # log = logging.getLogger('werkzeug')
+        # log.setLevel(logging.ERROR)
+
+        self.app.run(host='127.0.0.1', port=5000, debug=False)
+        # self.app.logger.setLevel(logging.ERROR)
 
     def start(self):
         # Start the Flask server in a separate thread
@@ -97,7 +81,7 @@ class AiderServer:
 
         while True:
             message = self.coder.get_input()
-            self.run(message)
+            self.run([message])
 
 # Create and run server
 server = AiderServer()

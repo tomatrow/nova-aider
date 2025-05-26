@@ -16,7 +16,11 @@
 		"editor": [
 			{
 				"title": "run",
-				"command": "dev.ajcaldwell.aider.run"
+				"command": "dev.ajcaldwell.aider.run_command"
+			},
+			{
+				"title": "sync",
+				"command": "dev.ajcaldwell.aider.sync_tabs_to_context"
 			}
 		]
 	},
@@ -33,9 +37,14 @@
 					"placeholderText": "Aider Context",
 					"headerCommands": [
 						{
+							"title": "Sync",
+							"image": "__builtin.refresh",
+							"command": "dev.ajcaldwell.aider.sync_tabs_to_context"
+						},
+						{
 							"title": "Run",
 							"image": "__builtin.path",
-							"command": "dev.ajcaldwell.aider.run"
+							"command": "dev.ajcaldwell.aider.run_command"
 						}
 					]
 				}
