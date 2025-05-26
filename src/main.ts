@@ -70,10 +70,20 @@ nova.commands.register("dev.ajcaldwell.aider.run_command", () => {
 			prompt: "Run",
 			secure: false
 		},
-		async value => {
-			if (!value) return
+		async message => {
+			if (!message) return
 
-			const { coder } = (await aiderCoderClient.run([value])) ?? {}
+			const activeTextEditor = nova.workspace.activeTextEditor
+			if (activeTextEditor && !activeTextEditor.selectedRange.empty) {
+				const textInSelectedLineRange = activeTextEditor.getTextInRange(
+					activeTextEditor.getLineRangeForRange(activeTextEditor.selectedRange)
+				)
+
+				const snippet = `<snippet fileName="${activeTextEditor.document.path}" language="${activeTextEditor.document.syntax}">\n${textInSelectedLineRange}\n</snippet>`
+				message += `the following snippet is available:\n${snippet}`
+			}
+
+			const { coder } = (await aiderCoderClient.run([message])) ?? {}
 			if (coder) handleCoderChange(coder)
 		}
 	)
