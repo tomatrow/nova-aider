@@ -1,2 +1,3 @@
-export * from "./wrappedNodeFetch"
 export * from "./runAsync"
+export * from "./watchTextDocumentPaths"
+export * from "./wrappedNodeFetch"
