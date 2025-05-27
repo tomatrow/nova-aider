@@ -1,13 +1,12 @@
 import { AiderCoderClient, type AiderCoderState } from "./AiderCoderClient"
 import { ContextTreeDataProvider, type ContextTreeNode } from "./ContextTreeDataProvider"
 import { isSameSet } from "./utility"
-import { wrappedNodeFetch, watchTextDocumentPaths } from "./nova-utility"
+import { wrappedNodeFetch, getTextDocumentPaths } from "./nova-utility"
 import { listGitIgnoredFiles } from "./git"
 
 let aiderCoderClient: AiderCoderClient
 let contextTreeDataProvider: ContextTreeDataProvider
 let contextTreeView: TreeView<ContextTreeNode>
-let textDocumentPathsWatcher: ReturnType<typeof watchTextDocumentPaths>
 let coderCacheWatcher: FileSystemWatcher
 
 let coder: AiderCoderState | undefined
@@ -49,11 +48,9 @@ export function activate() {
 		dataProvider: contextTreeDataProvider
 	})
 	coderCacheWatcher = watchCoderCache(handleCoderChange)
-	textDocumentPathsWatcher = watchTextDocumentPaths()
 
 	nova.subscriptions.add(contextTreeView)
 	nova.subscriptions.add(coderCacheWatcher)
-	nova.subscriptions.add(textDocumentPathsWatcher)
 }
 
 export function deactivate() {
@@ -95,7 +92,7 @@ nova.commands.register("dev.ajcaldwell.aider.sync_tabs_to_context", async () => 
 
 	const gitIgnoredFilesSet = new Set((await listGitIgnoredFiles()) ?? [])
 
-	const tabPaths = textDocumentPathsWatcher.paths.allTextDocumentPaths
+	const tabPaths = getTextDocumentPaths().allTextDocumentPaths
 	const contextPaths = [
 		...(refreshResult.coder.abs_fnames ?? []),
 		...(refreshResult.coder.abs_read_only_fnames ?? [])
