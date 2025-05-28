@@ -4,6 +4,10 @@ import { isSameSet } from "./utility"
 import { wrappedNodeFetch, getTextDocumentPaths } from "./nova-utility"
 import { listGitIgnoredFiles } from "./git"
 
+const stableServerPort =
+	49152 + ((nova.workspace.path?.split("").reduce((a, b) => a + b.charCodeAt(0), 0) ?? 0) % 16384) // 49152-65535
+const startServerCommand = `uv run --python python3.12 --with aider-chat --with flask '${nova.path.join(nova.extension.path, "server/aider-chat-with-server.py")}' ${stableServerPort}`
+
 let aiderCoderClient: AiderCoderClient
 let contextTreeDataProvider: ContextTreeDataProvider
 let contextTreeView: TreeView<ContextTreeNode>
@@ -42,6 +46,7 @@ export function activate() {
 
 	contextTreeDataProvider = new ContextTreeDataProvider()
 	aiderCoderClient = new AiderCoderClient({
+		base: `http://127.0.0.1:${stableServerPort}`,
 		fetch: wrappedNodeFetch as typeof fetch
 	})
 	contextTreeView = new TreeView("dev.ajcaldwell.aider.sidebar.context", {
@@ -114,4 +119,15 @@ nova.commands.register("dev.ajcaldwell.aider.sync_tabs_to_context", async () => 
 	if (!runResult?.coder) return
 
 	handleCoderChange(runResult.coder)
+})
+
+nova.commands.register("dev.ajcaldwell.aider.clip_aider_server_script", async () => {
+	await nova.clipboard.writeText(startServerCommand)
+
+	const notification = new NotificationRequest()
+
+	notification.title = "Copied to clipboard!"
+	notification.body = "Paste server into terminal emulator"
+
+	await nova.notifications.add(notification)
 })

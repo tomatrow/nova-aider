@@ -21,6 +21,10 @@
 			{
 				"title": "sync",
 				"command": "dev.ajcaldwell.aider.sync_tabs_to_context"
+			},
+			{
+				"title": "Copy server script to clipboard",
+				"command": "dev.ajcaldwell.aider.clip_aider_server_script"
 			}
 		]
 	},
@@ -36,6 +40,11 @@
 					"name": "Aider Context",
 					"placeholderText": "Aider Context",
 					"headerCommands": [
+						{
+							"title": "Start",
+							"image": "__builtin.action",
+							"command": "dev.ajcaldwell.aider.clip_aider_server_script"
+						},
 						{
 							"title": "Sync",
 							"image": "__builtin.refresh",

@@ -7,6 +7,12 @@ import logging
 import json
 import traceback
 import os
+import sys
+
+if len(sys.argv) < 2:
+    raise ValueError("Port number must be provided as the first argument")
+port = int(sys.argv[1])
+sys.argv.pop(1)  # Remove the port argument so aider doesn't see it
 
 class AiderServer:
     def __init__(self):
@@ -68,11 +74,10 @@ class AiderServer:
 
     def run_flask_server(self):
         # Disable Werkzeug's default logging
-        # log = logging.getLogger('werkzeug')
-        # log.setLevel(logging.ERROR)
-
-        self.app.run(host='127.0.0.1', port=5000, debug=False)
-        # self.app.logger.setLevel(logging.ERROR)
+        log = logging.getLogger('werkzeug')
+        log.setLevel(logging.ERROR)
+        self.app.run(host='127.0.0.1', port=port, debug=False)
+        self.app.logger.setLevel(logging.ERROR)
 
     def start(self):
         # Start the Flask server in a separate thread
