@@ -12,7 +12,7 @@
 		"rootDirs": ["src"],
 		"verbatimModuleSyntax": true,
 		"isolatedModules": true,
-		"lib": ["esnext", "DOM", "DOM.Iterable"],
+		"lib": ["esnext"],
 		"moduleResolution": "bundler",
 		"module": "esnext",
 		"noEmit": true,
