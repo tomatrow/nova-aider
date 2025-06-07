@@ -12,7 +12,7 @@
 		"build:watch": "vite build --watch",
 		"build:install": "fish -c 'pnpm run build; and open Aider.novaextension/'",
 		"aider": "aider --dark-mode --watch --model claude-opus-4-20250514 --thinking-tokens 32k",
-		"aider:server": "uv run --python python3.12 --with aider-chat --with flask '/Users/ajcaldwell/Library/Application Support/Nova/Extensions/dev.ajcaldwell.aider/server/aider-chat-with-server.py' 52239 --dark-mode --model claude-opus-4-20250514"
+		"aider:server": "uv run --python python3.12 --with aider-chat --with flask --with google-cloud-aiplatform '/Users/ajcaldwell/Library/Application Support/Nova/Extensions/dev.ajcaldwell.aider/server/aider-chat-with-server.py' 52239 --dark-mode --no-auto-commits --model vertex_ai/claude-sonnet-4@20250514"
 	},
 	"devDependencies": {
 		"@types/node": "^22.14.1",
