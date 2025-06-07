@@ -82,7 +82,7 @@ nova.commands.register("dev.ajcaldwell.aider.run_command", () => {
 				)
 
 				const snippet = `<snippet fileName="${activeTextEditor.document.path}" language="${activeTextEditor.document.syntax}">\n${textInSelectedLineRange}\n</snippet>`
-				message += `the following snippet is available:\n${snippet}`
+				message += `the following snippet is primary context of text selected by the user:\n${snippet}`
 			}
 
 			const { coder } = (await aiderCoderClient.run([message])) ?? {}
@@ -95,23 +95,25 @@ nova.commands.register("dev.ajcaldwell.aider.sync_tabs_to_context", async () => 
 	const refreshResult = await aiderCoderClient.refresh()
 	if (!refreshResult?.coder) return
 
-	const gitIgnoredFilesSet = new Set((await listGitIgnoredFiles()) ?? [])
+	const tabPaths = new Set(getTextDocumentPaths().allTextDocumentPaths)
+	const editableContextPaths = new Set(refreshResult.coder.abs_fnames ?? [])
 
-	const tabPaths = getTextDocumentPaths().allTextDocumentPaths
-	const contextPaths = [
-		...(refreshResult.coder.abs_fnames ?? []),
-		...(refreshResult.coder.abs_read_only_fnames ?? [])
-	]
+	const tabPathsOutsideWorkspace = new Set(
+		[...tabPaths].filter(tabPath => !tabPath.startsWith(nova.workspace.path!))
+	)
+	const pathsToIgnore = new Set([
+		...((await listGitIgnoredFiles()) ?? []),
+		...refreshResult.coder.abs_read_only_fnames,
+		...tabPathsOutsideWorkspace
+	])
 
 	const messages: string[] = []
 
-	const pathsToDrop = contextPaths.filter(contextPath => !tabPaths.includes(contextPath))
-	if (pathsToDrop.length) messages.push(["/drop", ...pathsToDrop].join(" "))
+	const pathsToDrop = editableContextPaths.difference(tabPaths).difference(pathsToIgnore)
+	if (pathsToDrop.size) messages.push(["/drop", ...pathsToDrop].join(" "))
 
-	const pathsToRead = tabPaths
-		.filter(tabPath => !contextPaths.includes(tabPath))
-		.filter(tabPath => !gitIgnoredFilesSet.has(tabPath))
-	if (pathsToRead.length) messages.push(["/read", ...pathsToRead].join(" "))
+	const pathsToAdd = tabPaths.difference(editableContextPaths).difference(pathsToIgnore)
+	if (pathsToAdd.size) messages.push(["/add", ...pathsToAdd].join(" "))
 
 	if (!messages.length) return
 
