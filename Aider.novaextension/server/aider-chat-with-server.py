@@ -50,10 +50,10 @@ class AiderServer:
                 kwargs = dict(io=io, from_coder=self.coder)
                 kwargs.update(switch.kwargs)
                 self.coder = Coder.create(**kwargs)
-            os.makedirs('.aider.nova.cache.v1', exist_ok=True)
-            coder_state = self.get_coder_state()
-            with open('.aider.nova.cache.v1/coder.json', 'w') as f:
-                json.dump(coder_state, f, indent=2)
+        os.makedirs('.aider.nova.cache.v1', exist_ok=True)
+        coder_state = self.get_coder_state()
+        with open('.aider.nova.cache.v1/coder.json', 'w') as f:
+            json.dump(coder_state, f, indent=2)
 
     def api_coder_post(self):
         try:
