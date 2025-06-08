@@ -170,3 +170,17 @@ nova.commands.register("dev.ajcaldwell.aider.sidebar.context.drop", () => {
 
 	writeMessages([`/drop ${nodesToDrop.map(node => node.absoluteFilePath).join(" ")}`])
 })
+
+nova.commands.register("dev.ajcaldwell.aider.sidebar.context.move_to_readonly", () => {
+	const nodesToRead = contextTreeView.selection.filter(node => node.type === "EDITABLE_FILE")
+	if (!nodesToRead.length) return
+
+	writeMessages([`/read ${nodesToRead.map(node => node.absoluteFilePath).join(" ")}`])
+})
+
+nova.commands.register("dev.ajcaldwell.aider.sidebar.context.move_to_editable", () => {
+	const nodesToAdd = contextTreeView.selection.filter(node => node.type === "READONLY_FILE")
+	if (!nodesToAdd.length) return
+
+	writeMessages([`/add ${nodesToAdd.map(node => node.absoluteFilePath).join(" ")}`])
+})

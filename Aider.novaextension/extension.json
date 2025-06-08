@@ -66,6 +66,16 @@
 							"title": "Drop",
 							"command": "dev.ajcaldwell.aider.sidebar.context.drop",
 							"when": "viewItem === 'EDITABLE_FILE' || viewItem === 'READONLY_FILE'"
+						},
+						{
+							"title": "Move to Readonly",
+							"command": "dev.ajcaldwell.aider.sidebar.context.move_to_readonly",
+							"when": "viewItem === 'EDITABLE_FILE'"
+						},
+						{
+							"title": "Move to Editable",
+							"command": "dev.ajcaldwell.aider.sidebar.context.move_to_editable",
+							"when": "viewItem === 'READONLY_FILE'"
 						}
 					]
 				}
