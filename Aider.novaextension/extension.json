@@ -55,6 +55,13 @@
 							"image": "__builtin.path",
 							"command": "dev.ajcaldwell.aider.run_command"
 						}
+					],
+					"contextCommands": [
+						{
+							"title": "Open",
+							"command": "dev.ajcaldwell.aider.sidebar.context.open",
+							"when": "viewItem === 'EDITABLE_FILE' || viewItem === 'READONLY_FILE'"
+						}
 					]
 				}
 			]
