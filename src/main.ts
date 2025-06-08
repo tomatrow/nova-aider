@@ -148,3 +148,16 @@ nova.commands.register("dev.ajcaldwell.aider.clip_aider_server_script", async ()
 
 	await nova.notifications.add(notification)
 })
+
+nova.commands.register("dev.ajcaldwell.aider.sidebar.context.double-click", () => {
+	nova.commands.invoke("dev.ajcaldwell.aider.sidebar.context.open")
+})
+
+nova.commands.register("dev.ajcaldwell.aider.sidebar.context.open", () => {
+	for (const node of contextTreeView.selection)
+		switch (node.type) {
+			case "EDITABLE_FILE":
+			case "READONLY_FILE":
+				nova.workspace.openFile(node.absoluteFilePath)
+		}
+})

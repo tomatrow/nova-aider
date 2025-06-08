@@ -80,6 +80,7 @@ export class ContextTreeDataProvider implements TreeDataProvider<ContextTreeNode
 				)
 				treeItem.tooltip = nova.workspace.relativizePath(element.absoluteFilePath)
 				treeItem.path = element.absoluteFilePath
+				treeItem.command = "dev.ajcaldwell.aider.sidebar.context.double-click"
 				return treeItem
 			}
 		}
