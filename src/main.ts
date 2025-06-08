@@ -161,3 +161,12 @@ nova.commands.register("dev.ajcaldwell.aider.sidebar.context.open", () => {
 				nova.workspace.openFile(node.absoluteFilePath)
 		}
 })
+
+nova.commands.register("dev.ajcaldwell.aider.sidebar.context.drop", () => {
+	const nodesToDrop = contextTreeView.selection.filter(
+		node => node.type === "EDITABLE_FILE" || node.type === "READONLY_FILE"
+	)
+	if (!nodesToDrop.length) return
+
+	writeMessages([`/drop ${nodesToDrop.map(node => node.absoluteFilePath).join(" ")}`])
+})

@@ -61,6 +61,11 @@
 							"title": "Open",
 							"command": "dev.ajcaldwell.aider.sidebar.context.open",
 							"when": "viewItem === 'EDITABLE_FILE' || viewItem === 'READONLY_FILE'"
+						},
+						{
+							"title": "Drop",
+							"command": "dev.ajcaldwell.aider.sidebar.context.drop",
+							"when": "viewItem === 'EDITABLE_FILE' || viewItem === 'READONLY_FILE'"
 						}
 					]
 				}
