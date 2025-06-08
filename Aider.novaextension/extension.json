@@ -15,15 +15,13 @@
 	"commands": {
 		"editor": [
 			{
-				"title": "run",
+				"title": "Run Aider with selection",
 				"command": "dev.ajcaldwell.aider.run_command"
-			},
+			}
+		],
+		"extensions": [
 			{
-				"title": "sync",
-				"command": "dev.ajcaldwell.aider.sync_tabs_to_context"
-			},
-			{
-				"title": "Copy server script to clipboard",
+				"title": "Copy Aider script to clipboard",
 				"command": "dev.ajcaldwell.aider.clip_aider_server_script"
 			}
 		]
