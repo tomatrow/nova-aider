@@ -1,4 +1,4 @@
-import { type AiderCoderState } from "./AiderCoderClient"
+import { type AiderCoderState } from "./types"
 
 export type ContextTreeNodeData =
 	| { type: "ROOT" }
@@ -98,7 +98,7 @@ export class ContextTreeDataProvider implements TreeDataProvider<ContextTreeNode
 			}
 			case "READONLY_FILE": {
 				const treeItem = new TreeItem(
-					element.absoluteFilePath,
+					element.absoluteFilePath.replace(nova.workspace.path!, ""),
 					TreeItemCollapsibleState.None
 				)
 				treeItem.identifier = element.id
@@ -107,7 +107,7 @@ export class ContextTreeDataProvider implements TreeDataProvider<ContextTreeNode
 			}
 			case "EDITABLE_FILE": {
 				const treeItem = new TreeItem(
-					element.absoluteFilePath,
+					element.absoluteFilePath.replace(nova.workspace.path!, ""),
 					TreeItemCollapsibleState.None
 				)
 				treeItem.identifier = element.id

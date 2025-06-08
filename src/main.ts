@@ -1,14 +1,9 @@
-import { AiderCoderClient, type AiderCoderState } from "./AiderCoderClient"
 import { ContextTreeDataProvider, type ContextTreeNode } from "./ContextTreeDataProvider"
 import { isSameSet } from "./utility"
-import { wrappedNodeFetch, getTextDocumentPaths } from "./nova-utility"
+import { getTextDocumentPaths } from "./nova-utility"
 import { listGitIgnoredFiles } from "./git"
+import { type AiderCoderState } from "./types"
 
-const stableServerPort =
-	49152 + ((nova.workspace.path?.split("").reduce((a, b) => a + b.charCodeAt(0), 0) ?? 0) % 16384) // 49152-65535
-const startServerCommand = `uv run --python python3.12 --with aider-chat --with flask '${nova.path.join(nova.extension.path, "server/aider-chat-with-server.py")}' ${stableServerPort}`
-
-let aiderCoderClient: AiderCoderClient
 let contextTreeDataProvider: ContextTreeDataProvider
 let contextTreeView: TreeView<ContextTreeNode>
 let coderCacheWatcher: FileSystemWatcher
@@ -27,17 +22,40 @@ async function handleCoderChange(newCoder: AiderCoderState) {
 	await contextTreeView.reload()
 }
 
+const CODER_STATE_FILE_PATH = ".aider.nova.cache.v1/coder.json"
+const MESSAGES_FILE_PATH = ".aider.nova.cache.v1/messages.json"
+
+function readCoderState() {
+	try {
+		const file = nova.fs.open(
+			nova.path.join(nova.workspace.path!, CODER_STATE_FILE_PATH),
+			"r",
+			"utf8"
+		) as FileTextMode
+		const text = file.read()
+		if (!text) return
+		const coder: AiderCoderState = JSON.parse(text)
+		return coder
+	} catch (error) {
+		console.error(error)
+	}
+}
+
+function writeMessages(messages: string[]) {
+	const file = nova.fs.open(
+		nova.path.join(nova.workspace.path!, MESSAGES_FILE_PATH),
+		"w",
+		"utf8"
+	) as FileTextMode
+	file.write(JSON.stringify(messages))
+	file.close()
+}
+
 function watchCoderCache(onChange?: (coder: AiderCoderState) => void) {
-	return nova.fs.watch(".aider.nova.cache.v1/coder.json", path => {
-		try {
-			const file = nova.fs.open(path, "r", "utf8") as FileTextMode
-			const text = file.read()
-			if (!text) return
-			const coder: AiderCoderState = JSON.parse(text)
-			onChange?.(coder)
-		} catch (error) {
-			console.error(error)
-		}
+	return nova.fs.watch(CODER_STATE_FILE_PATH, () => {
+		const coder = readCoderState()
+		if (!coder) return
+		onChange?.(coder)
 	})
 }
 
@@ -45,10 +63,6 @@ export function activate() {
 	console.log("[activate]")
 
 	contextTreeDataProvider = new ContextTreeDataProvider()
-	aiderCoderClient = new AiderCoderClient({
-		base: `http://127.0.0.1:${stableServerPort}`,
-		fetch: wrappedNodeFetch as typeof fetch
-	})
 	contextTreeView = new TreeView("dev.ajcaldwell.aider.sidebar.context", {
 		dataProvider: contextTreeDataProvider
 	})
@@ -85,25 +99,27 @@ nova.commands.register("dev.ajcaldwell.aider.run_command", () => {
 				message += `the following snippet is primary context of text selected by the user:\n${snippet}`
 			}
 
-			const { coder } = (await aiderCoderClient.run([message])) ?? {}
-			if (coder) handleCoderChange(coder)
+			writeMessages([message])
 		}
 	)
 })
 
 nova.commands.register("dev.ajcaldwell.aider.sync_tabs_to_context", async () => {
-	const refreshResult = await aiderCoderClient.refresh()
-	if (!refreshResult?.coder) return
+	const coder = readCoderState() ?? {
+		abs_fnames: [],
+		abs_read_only_fnames: [],
+		edit_format: "code"
+	}
 
 	const tabPaths = new Set(getTextDocumentPaths().allTextDocumentPaths)
-	const editableContextPaths = new Set(refreshResult.coder.abs_fnames ?? [])
+	const editableContextPaths = new Set(coder.abs_fnames ?? [])
 
 	const tabPathsOutsideWorkspace = new Set(
 		[...tabPaths].filter(tabPath => !tabPath.startsWith(nova.workspace.path!))
 	)
 	const pathsToIgnore = new Set([
 		...((await listGitIgnoredFiles()) ?? []),
-		...refreshResult.coder.abs_read_only_fnames,
+		...coder.abs_read_only_fnames,
 		...tabPathsOutsideWorkspace
 	])
 
@@ -117,13 +133,12 @@ nova.commands.register("dev.ajcaldwell.aider.sync_tabs_to_context", async () => 
 
 	if (!messages.length) return
 
-	const runResult = await aiderCoderClient.run(messages)
-	if (!runResult?.coder) return
-
-	handleCoderChange(runResult.coder)
+	writeMessages(messages)
 })
 
 nova.commands.register("dev.ajcaldwell.aider.clip_aider_server_script", async () => {
+	const startServerCommand = `uv run --python python3.12 --with aider-chat '${nova.path.join(nova.extension.path, "server/aider-chat-with-server.py")}'`
+
 	await nova.clipboard.writeText(startServerCommand)
 
 	const notification = new NotificationRequest()
