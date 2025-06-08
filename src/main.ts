@@ -1,24 +1,42 @@
 import { ContextTreeDataProvider, type ContextTreeNode } from "./ContextTreeDataProvider"
 import { isSameSet } from "./utility"
-import { getTextDocumentPaths } from "./nova-utility"
+import { watchTextDocumentPaths, getTextDocumentPaths } from "./nova-utility"
 import { listGitIgnoredFiles } from "./git"
 import { type AiderCoderState } from "./types"
 
 let contextTreeDataProvider: ContextTreeDataProvider
 let contextTreeView: TreeView<ContextTreeNode>
 let coderCacheWatcher: FileSystemWatcher
+let textDocumentPathsWatcher: ReturnType<typeof watchTextDocumentPaths>
+let gitIgnoredFiles = new Set<string>()
+let textDocumentPaths = getTextDocumentPaths()
+let coder: AiderCoderState = {
+	abs_fnames: [],
+	abs_read_only_fnames: [],
+	edit_format: "code"
+}
 
-let coder: AiderCoderState | undefined
+async function refreshGitIgnoredFiles() {
+	try {
+		gitIgnoredFiles = new Set(await listGitIgnoredFiles())
+		contextTreeDataProvider.update(coder, textDocumentPaths, gitIgnoredFiles)
+		await contextTreeView.reload()
+	} catch (error) {
+		console.error(error)
+	}
+}
+
 async function handleCoderChange(newCoder: AiderCoderState) {
 	if (coder) {
 		const isSameCoder =
 			isSameSet(coder.abs_fnames, newCoder.abs_fnames) &&
-			isSameSet(coder.abs_read_only_fnames, newCoder.abs_read_only_fnames)
+			isSameSet(coder.abs_read_only_fnames, newCoder.abs_read_only_fnames) &&
+			coder.edit_format === newCoder.edit_format
 		if (isSameCoder) return
 	}
 
 	coder = newCoder
-	contextTreeDataProvider.update(coder)
+	contextTreeDataProvider.update(coder, getTextDocumentPaths(), gitIgnoredFiles)
 	await contextTreeView.reload()
 }
 
@@ -59,17 +77,25 @@ function watchCoderCache(onChange?: (coder: AiderCoderState) => void) {
 	})
 }
 
-export function activate() {
+export async function activate() {
 	console.log("[activate]")
+
+	await refreshGitIgnoredFiles()
 
 	contextTreeDataProvider = new ContextTreeDataProvider()
 	contextTreeView = new TreeView("dev.ajcaldwell.aider.sidebar.context", {
 		dataProvider: contextTreeDataProvider
 	})
 	coderCacheWatcher = watchCoderCache(handleCoderChange)
+	textDocumentPathsWatcher = watchTextDocumentPaths(newTextDocumentPaths => {
+		textDocumentPaths = newTextDocumentPaths
+		contextTreeDataProvider.update(coder, textDocumentPaths, gitIgnoredFiles)
+		contextTreeView.reload()
+	})
 
 	nova.subscriptions.add(contextTreeView)
 	nova.subscriptions.add(coderCacheWatcher)
+	nova.subscriptions.add(textDocumentPathsWatcher)
 }
 
 export function deactivate() {
@@ -102,38 +128,6 @@ nova.commands.register("dev.ajcaldwell.aider.run_command", () => {
 			writeMessages([message])
 		}
 	)
-})
-
-nova.commands.register("dev.ajcaldwell.aider.sync_tabs_to_context", async () => {
-	const coder = readCoderState() ?? {
-		abs_fnames: [],
-		abs_read_only_fnames: [],
-		edit_format: "code"
-	}
-
-	const tabPaths = new Set(getTextDocumentPaths().allTextDocumentPaths)
-	const editableContextPaths = new Set(coder.abs_fnames ?? [])
-
-	const tabPathsOutsideWorkspace = new Set(
-		[...tabPaths].filter(tabPath => !tabPath.startsWith(nova.workspace.path!))
-	)
-	const pathsToIgnore = new Set([
-		...((await listGitIgnoredFiles()) ?? []),
-		...coder.abs_read_only_fnames,
-		...tabPathsOutsideWorkspace
-	])
-
-	const messages: string[] = []
-
-	const pathsToDrop = editableContextPaths.difference(tabPaths).difference(pathsToIgnore)
-	if (pathsToDrop.size) messages.push(["/drop", ...pathsToDrop].join(" "))
-
-	const pathsToAdd = tabPaths.difference(editableContextPaths).difference(pathsToIgnore)
-	if (pathsToAdd.size) messages.push(["/add", ...pathsToAdd].join(" "))
-
-	if (!messages.length) return
-
-	writeMessages(messages)
 })
 
 nova.commands.register("dev.ajcaldwell.aider.clip_aider_server_script", async () => {
@@ -172,15 +166,23 @@ nova.commands.register("dev.ajcaldwell.aider.sidebar.context.drop", () => {
 })
 
 nova.commands.register("dev.ajcaldwell.aider.sidebar.context.move_to_readonly", () => {
-	const nodesToRead = contextTreeView.selection.filter(node => node.type === "EDITABLE_FILE")
+	const nodesToRead = contextTreeView.selection.filter(
+		node => node.type === "EDITABLE_FILE" || node.type === "SUGGESTED_FILE"
+	)
 	if (!nodesToRead.length) return
 
 	writeMessages([`/read ${nodesToRead.map(node => node.absoluteFilePath).join(" ")}`])
 })
 
 nova.commands.register("dev.ajcaldwell.aider.sidebar.context.move_to_editable", () => {
-	const nodesToAdd = contextTreeView.selection.filter(node => node.type === "READONLY_FILE")
+	const nodesToAdd = contextTreeView.selection.filter(
+		node => node.type === "READONLY_FILE" || node.type === "SUGGESTED_FILE"
+	)
 	if (!nodesToAdd.length) return
 
 	writeMessages([`/add ${nodesToAdd.map(node => node.absoluteFilePath).join(" ")}`])
+})
+
+nova.commands.register("dev.ajcaldwell.aider.refresh-git-ignored", () => {
+	refreshGitIgnoredFiles()
 })

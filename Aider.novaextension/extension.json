@@ -21,8 +21,12 @@
 		],
 		"extensions": [
 			{
-				"title": "Copy Aider script to clipboard",
+				"title": "Copy start script to clipboard",
 				"command": "dev.ajcaldwell.aider.clip_aider_server_script"
+			},
+			{
+				"title": "Refresh gitignored files",
+				"command": "dev.ajcaldwell.aider.refresh-git-ignored"
 			}
 		]
 	},
@@ -38,16 +42,6 @@
 					"name": "Aider Context",
 					"placeholderText": "Aider Context",
 					"headerCommands": [
-						{
-							"title": "Start",
-							"image": "__builtin.action",
-							"command": "dev.ajcaldwell.aider.clip_aider_server_script"
-						},
-						{
-							"title": "Sync",
-							"image": "__builtin.refresh",
-							"command": "dev.ajcaldwell.aider.sync_tabs_to_context"
-						},
 						{
 							"title": "Run",
 							"image": "__builtin.path",
@@ -68,12 +62,12 @@
 						{
 							"title": "Move to Readonly",
 							"command": "dev.ajcaldwell.aider.sidebar.context.move_to_readonly",
-							"when": "viewItem === 'EDITABLE_FILE'"
+							"when": "viewItem === 'EDITABLE_FILE' || viewItem === 'SUGGESTED_FILE'"
 						},
 						{
 							"title": "Move to Editable",
 							"command": "dev.ajcaldwell.aider.sidebar.context.move_to_editable",
-							"when": "viewItem === 'READONLY_FILE'"
+							"when": "viewItem === 'READONLY_FILE' || viewItem === 'SUGGESTED_FILE'"
 						}
 					]
 				}

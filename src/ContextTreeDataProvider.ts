@@ -1,4 +1,5 @@
 import { type AiderCoderState } from "./types"
+import { type TextDocumentPaths } from "./nova-utility"
 
 export type ContextTreeNodeData =
 	| { type: "ROOT" }
@@ -6,10 +7,16 @@ export type ContextTreeNodeData =
 	| { type: "READONLY_FILE"; absoluteFilePath: string }
 	| { type: "EDITABLE_LIST" }
 	| { type: "EDITABLE_FILE"; absoluteFilePath: string }
+	| { type: "SUGGESTED_LIST" }
+	| { type: "SUGGESTED_FILE"; absoluteFilePath: string }
 
 export type ContextTreeNode = ContextTreeNodeData & { children: ContextTreeNode[] }
 
-function createContextTree(coder: AiderCoderState): ContextTreeNode {
+function createContextTree(
+	coder: AiderCoderState,
+	editorPaths: TextDocumentPaths,
+	ignoredFiles: Set<string>
+): ContextTreeNode {
 	const children: ContextTreeNode[] = []
 
 	if (coder.abs_fnames.length) {
@@ -44,14 +51,36 @@ function createContextTree(coder: AiderCoderState): ContextTreeNode {
 		children.push(readonlyListNode)
 	}
 
+	const suggestablePaths = editorPaths.allTextDocumentPaths.filter(
+		tabPath =>
+			tabPath.startsWith(nova.workspace.path!) &&
+			!ignoredFiles.has(tabPath) &&
+			!coder.abs_fnames.includes(tabPath) &&
+			!coder.abs_read_only_fnames.includes(tabPath)
+	)
+	if (suggestablePaths.length) {
+		const suggestedNodes: ContextTreeNode[] = suggestablePaths.map(absoluteFilePath => ({
+			type: "SUGGESTED_FILE",
+			absoluteFilePath,
+			children: []
+		}))
+
+		const suggestedListNode: ContextTreeNode = {
+			type: "SUGGESTED_LIST",
+			children: suggestedNodes
+		}
+
+		children.push(suggestedListNode)
+	}
+
 	return { type: "ROOT", children }
 }
 
 export class ContextTreeDataProvider implements TreeDataProvider<ContextTreeNode> {
 	rootNode: ContextTreeNode = { type: "ROOT", children: [] }
 
-	update(coder?: AiderCoderState) {
-		this.rootNode = coder ? createContextTree(coder) : { type: "ROOT", children: [] }
+	update(coder: AiderCoderState, editorPaths: TextDocumentPaths, ignoredFiles: Set<string>) {
+		this.rootNode = createContextTree(coder, editorPaths, ignoredFiles)
 	}
 
 	getChildren(element: ContextTreeNode | null): ContextTreeNode[] {
@@ -72,8 +101,13 @@ export class ContextTreeDataProvider implements TreeDataProvider<ContextTreeNode
 				const treeItem = new TreeItem("Readonly", TreeItemCollapsibleState.Expanded)
 				return treeItem
 			}
+			case "SUGGESTED_LIST": {
+				const treeItem = new TreeItem("Suggested", TreeItemCollapsibleState.Expanded)
+				return treeItem
+			}
 			case "EDITABLE_FILE":
-			case "READONLY_FILE": {
+			case "READONLY_FILE":
+			case "SUGGESTED_FILE": {
 				const treeItem = new TreeItem(
 					nova.path.basename(element.absoluteFilePath),
 					TreeItemCollapsibleState.None
