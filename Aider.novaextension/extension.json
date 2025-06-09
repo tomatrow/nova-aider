@@ -15,8 +15,16 @@
 	"commands": {
 		"editor": [
 			{
-				"title": "Run Aider with selection",
-				"command": "dev.ajcaldwell.aider.run_command"
+				"title": "Chat with selection",
+				"command": "dev.ajcaldwell.aider.chat_with_selection",
+				"shortcut": "cmd-k",
+				"when": "editorHasFocus"
+			},
+			{
+				"title": "Add to context",
+				"command": "dev.ajcaldwell.aider.add_snippet_to_context",
+				"shortcut": "cmd-l",
+				"when": "editorHasFocus"
 			}
 		],
 		"extensions": [
@@ -41,13 +49,6 @@
 					"id": "dev.ajcaldwell.aider.sidebar.context",
 					"name": "Aider Context",
 					"placeholderText": "Aider Context",
-					"headerCommands": [
-						{
-							"title": "Run",
-							"image": "__builtin.path",
-							"command": "dev.ajcaldwell.aider.run_command"
-						}
-					],
 					"contextCommands": [
 						{
 							"title": "Open",

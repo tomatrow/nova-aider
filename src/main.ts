@@ -102,9 +102,24 @@ export function deactivate() {
 	console.log("[deactivate]")
 }
 
-nova.commands.register("dev.ajcaldwell.aider.run_command", () => {
+nova.commands.register("dev.ajcaldwell.aider.chat_with_selection", () => {
+	const { activeTextEditor } = nova.workspace
+	if (!activeTextEditor) return
+
+	const { document, selectedRange } = activeTextEditor
+	const { path, syntax } = document
+
+	const guard = path && !selectedRange.empty
+	if (!guard) return
+
+	const selectedLineRange = activeTextEditor.getLineRangeForRange(selectedRange)
+	const textInSelectedLineRange = activeTextEditor.getTextInRange(selectedLineRange)
+	const snippet = `<snippet fileName="${path}" language="${syntax}" lineRange="${selectedLineRange.start}-${selectedLineRange.end}">\n${textInSelectedLineRange}\n</snippet>`
+
 	nova.workspace.showInputPanel(
-		"Run Aider Command",
+		`Chat with ${nova.path.basename(
+			path
+		)} (${selectedLineRange.start} - ${selectedLineRange.end})`,
 		{
 			label: "Command",
 			placeholder: "Aider command",
@@ -112,20 +127,17 @@ nova.commands.register("dev.ajcaldwell.aider.run_command", () => {
 			prompt: "Run",
 			secure: false
 		},
-		async message => {
-			if (!message) return
+		input => {
+			if (typeof input !== "string") return
 
-			const activeTextEditor = nova.workspace.activeTextEditor
-			if (activeTextEditor && !activeTextEditor.selectedRange.empty) {
-				const textInSelectedLineRange = activeTextEditor.getTextInRange(
-					activeTextEditor.getLineRangeForRange(activeTextEditor.selectedRange)
-				)
+			const messages: string[] = []
 
-				const snippet = `<snippet fileName="${activeTextEditor.document.path}" language="${activeTextEditor.document.syntax}">\n${textInSelectedLineRange}\n</snippet>`
-				message += `the following snippet is primary context of text selected by the user:\n${snippet}`
-			}
+			if (![...coder.abs_fnames, coder.abs_read_only_fnames].includes(path))
+				messages.push(`/add ${path}`)
 
-			writeMessages([message])
+			messages.push(`${input ?? ""}\n${snippet}`)
+
+			writeMessages(messages)
 		}
 	)
 })
@@ -185,4 +197,24 @@ nova.commands.register("dev.ajcaldwell.aider.sidebar.context.move_to_editable", 
 
 nova.commands.register("dev.ajcaldwell.aider.refresh-git-ignored", () => {
 	refreshGitIgnoredFiles()
+})
+
+nova.commands.register("dev.ajcaldwell.aider.add_snippet_to_context", () => {
+	console.log("[dev.ajcaldwell.aider.add_snippet_to_context]")
+
+	const activeTextEditor = nova.workspace.activeTextEditor
+	if (!activeTextEditor) return
+
+	const selectedLineRange = activeTextEditor.getLineRangeForRange(activeTextEditor.selectedRange)
+	const textInSelectedLineRange = activeTextEditor.getTextInRange(selectedLineRange)
+
+	console.log(
+		"[dev.ajcaldwell.aider.add_snippet_to_context]",
+		JSON.stringify({
+			path: activeTextEditor.document.path,
+			start: selectedLineRange.start,
+			end: selectedLineRange.end,
+			textInSelectedLineRange
+		})
+	)
 })
