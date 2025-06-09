@@ -19,8 +19,7 @@ let gitIgnoredFiles = new Set<string>()
 let textDocumentPaths = getTextDocumentPaths()
 let coder: AiderCoderState = {
 	abs_fnames: [],
-	abs_read_only_fnames: [],
-	edit_format: "code"
+	abs_read_only_fnames: []
 }
 let novaSnippets: (ContextTreeNodeData & { type: "SNIPPET" })[] = []
 
@@ -38,8 +37,7 @@ async function handleCoderChange(newCoder: AiderCoderState) {
 	if (coder) {
 		const isSameCoder =
 			isSameSet(coder.abs_fnames, newCoder.abs_fnames) &&
-			isSameSet(coder.abs_read_only_fnames, newCoder.abs_read_only_fnames) &&
-			coder.edit_format === newCoder.edit_format
+			isSameSet(coder.abs_read_only_fnames, newCoder.abs_read_only_fnames)
 		if (isSameCoder) return
 	}
 

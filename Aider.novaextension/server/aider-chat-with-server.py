@@ -19,8 +19,7 @@ class AiderServer:
     def get_coder_state(self):
         return { 
             "abs_fnames": list(self.coder.abs_fnames),
-            "abs_read_only_fnames": list(self.coder.abs_read_only_fnames),
-            "edit_format": self.coder.edit_format
+            "abs_read_only_fnames": list(self.coder.abs_read_only_fnames)
         }
 
     def run(self, messages):
