@@ -1,8 +1,11 @@
 import { ContextTreeDataProvider, type ContextTreeNode } from "./ContextTreeDataProvider"
-import { isSameSet } from "./utility"
+import { isSameSet, isTruthy } from "./utility"
 import { watchTextDocumentPaths, getTextDocumentPaths } from "./nova-utility"
 import { listGitIgnoredFiles } from "./git"
 import { type AiderCoderState } from "./types"
+
+const CODER_STATE_FILE_PATH = ".aider.nova.cache.v1/coder.json"
+const MESSAGES_FILE_PATH = ".aider.nova.cache.v1/messages.json"
 
 let contextTreeDataProvider: ContextTreeDataProvider
 let contextTreeView: TreeView<ContextTreeNode>
@@ -39,9 +42,6 @@ async function handleCoderChange(newCoder: AiderCoderState) {
 	contextTreeDataProvider.update(coder, getTextDocumentPaths(), gitIgnoredFiles)
 	await contextTreeView.reload()
 }
-
-const CODER_STATE_FILE_PATH = ".aider.nova.cache.v1/coder.json"
-const MESSAGES_FILE_PATH = ".aider.nova.cache.v1/messages.json"
 
 function readCoderState() {
 	try {
@@ -132,7 +132,7 @@ nova.commands.register("dev.ajcaldwell.aider.chat_with_selection", () => {
 
 			const messages: string[] = []
 
-			if (![...coder.abs_fnames, coder.abs_read_only_fnames].includes(path))
+			if (![...coder.abs_fnames, ...coder.abs_read_only_fnames].includes(path))
 				messages.push(`/add ${path}`)
 
 			messages.push(`${input ?? ""}\n${snippet}`)
@@ -161,38 +161,49 @@ nova.commands.register("dev.ajcaldwell.aider.sidebar.context.double-click", () =
 
 nova.commands.register("dev.ajcaldwell.aider.sidebar.context.open", () => {
 	for (const node of contextTreeView.selection)
-		switch (node.type) {
-			case "EDITABLE_FILE":
-			case "READONLY_FILE":
-				nova.workspace.openFile(node.absoluteFilePath)
-		}
+		if (node.type === "FILE") nova.workspace.openFile(node.absoluteFilePath)
 })
 
 nova.commands.register("dev.ajcaldwell.aider.sidebar.context.drop", () => {
-	const nodesToDrop = contextTreeView.selection.filter(
-		node => node.type === "EDITABLE_FILE" || node.type === "READONLY_FILE"
-	)
-	if (!nodesToDrop.length) return
+	const pathsToDrop = contextTreeView.selection
+		.map(
+			node =>
+				node.type === "FILE" &&
+				(node.category === "EDITABLE" || node.category === "READONLY") &&
+				node.absoluteFilePath
+		)
+		.filter(isTruthy)
+	if (!pathsToDrop.length) return
 
-	writeMessages([`/drop ${nodesToDrop.map(node => node.absoluteFilePath).join(" ")}`])
+	writeMessages([`/drop ${pathsToDrop.join(" ")}`])
 })
 
 nova.commands.register("dev.ajcaldwell.aider.sidebar.context.move_to_readonly", () => {
-	const nodesToRead = contextTreeView.selection.filter(
-		node => node.type === "EDITABLE_FILE" || node.type === "SUGGESTED_FILE"
-	)
-	if (!nodesToRead.length) return
+	const pathsToRead = contextTreeView.selection
+		.map(
+			node =>
+				node.type === "FILE" &&
+				(node.category === "EDITABLE" || node.category === "SUGGESTED") &&
+				node.absoluteFilePath
+		)
+		.filter(isTruthy)
+	if (!pathsToRead.length) return
 
-	writeMessages([`/read ${nodesToRead.map(node => node.absoluteFilePath).join(" ")}`])
+	writeMessages([`/read ${pathsToRead.join(" ")}`])
 })
 
 nova.commands.register("dev.ajcaldwell.aider.sidebar.context.move_to_editable", () => {
-	const nodesToAdd = contextTreeView.selection.filter(
-		node => node.type === "READONLY_FILE" || node.type === "SUGGESTED_FILE"
-	)
-	if (!nodesToAdd.length) return
+	const pathsToAdd = contextTreeView.selection
+		.map(
+			node =>
+				node.type === "FILE" &&
+				(node.category === "READONLY" || node.category === "SUGGESTED") &&
+				node.absoluteFilePath
+		)
+		.filter(isTruthy)
+	if (!pathsToAdd.length) return
 
-	writeMessages([`/add ${nodesToAdd.map(node => node.absoluteFilePath).join(" ")}`])
+	writeMessages([`/add ${pathsToAdd.join(" ")}`])
 })
 
 nova.commands.register("dev.ajcaldwell.aider.refresh-git-ignored", () => {
@@ -205,16 +216,26 @@ nova.commands.register("dev.ajcaldwell.aider.add_snippet_to_context", () => {
 	const activeTextEditor = nova.workspace.activeTextEditor
 	if (!activeTextEditor) return
 
-	const selectedLineRange = activeTextEditor.getLineRangeForRange(activeTextEditor.selectedRange)
-	const textInSelectedLineRange = activeTextEditor.getTextInRange(selectedLineRange)
+	const { selectedText, selectedRange } = activeTextEditor
+	const { path } = activeTextEditor.document
+	const guard = path && selectedText
+	if (!guard) return
+
+	const selectedLineRange = activeTextEditor.getLineRangeForRange(selectedRange)
 
 	console.log(
 		"[dev.ajcaldwell.aider.add_snippet_to_context]",
 		JSON.stringify({
-			path: activeTextEditor.document.path,
-			start: selectedLineRange.start,
-			end: selectedLineRange.end,
-			textInSelectedLineRange
+			path,
+			text: selectedText,
+			characterRange: {
+				start: selectedRange.start,
+				end: selectedRange.end
+			},
+			lineRange: {
+				start: selectedLineRange.start,
+				end: selectedLineRange.end
+			}
 		})
 	)
 })

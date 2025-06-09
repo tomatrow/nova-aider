@@ -3,12 +3,8 @@ import { type TextDocumentPaths } from "./nova-utility"
 
 export type ContextTreeNodeData =
 	| { type: "ROOT" }
-	| { type: "READONLY_LIST" }
-	| { type: "READONLY_FILE"; absoluteFilePath: string }
-	| { type: "EDITABLE_LIST" }
-	| { type: "EDITABLE_FILE"; absoluteFilePath: string }
-	| { type: "SUGGESTED_LIST" }
-	| { type: "SUGGESTED_FILE"; absoluteFilePath: string }
+	| { type: "FOLDER"; category: "EDITABLE" | "READONLY" | "SUGGESTED" }
+	| { type: "FILE"; absoluteFilePath: string; category: "EDITABLE" | "READONLY" | "SUGGESTED" }
 
 export type ContextTreeNode = ContextTreeNodeData & { children: ContextTreeNode[] }
 
@@ -21,13 +17,15 @@ function createContextTree(
 
 	if (coder.abs_fnames.length) {
 		const editableFileNodes: ContextTreeNode[] = coder.abs_fnames.map(absoluteFilePath => ({
-			type: "EDITABLE_FILE",
+			type: "FILE",
 			absoluteFilePath,
+			category: "EDITABLE",
 			children: []
 		}))
 
 		const editableListNode: ContextTreeNode = {
-			type: "EDITABLE_LIST",
+			type: "FOLDER",
+			category: "EDITABLE",
 			children: editableFileNodes
 		}
 
@@ -37,14 +35,16 @@ function createContextTree(
 	if (coder.abs_read_only_fnames.length) {
 		const readonlyFileNodes: ContextTreeNode[] = coder.abs_read_only_fnames.map(
 			absoluteFilePath => ({
-				type: "READONLY_FILE",
+				type: "FILE",
 				absoluteFilePath,
+				category: "READONLY",
 				children: []
 			})
 		)
 
 		const readonlyListNode: ContextTreeNode = {
-			type: "READONLY_LIST",
+			type: "FOLDER",
+			category: "READONLY",
 			children: readonlyFileNodes
 		}
 
@@ -60,13 +60,15 @@ function createContextTree(
 	)
 	if (suggestablePaths.length) {
 		const suggestedNodes: ContextTreeNode[] = suggestablePaths.map(absoluteFilePath => ({
-			type: "SUGGESTED_FILE",
+			type: "FILE",
 			absoluteFilePath,
+			category: "SUGGESTED",
 			children: []
 		}))
 
 		const suggestedListNode: ContextTreeNode = {
-			type: "SUGGESTED_LIST",
+			type: "FOLDER",
+			category: "SUGGESTED",
 			children: suggestedNodes
 		}
 
@@ -83,39 +85,37 @@ export class ContextTreeDataProvider implements TreeDataProvider<ContextTreeNode
 		this.rootNode = createContextTree(coder, editorPaths, ignoredFiles)
 	}
 
-	getChildren(element: ContextTreeNode | null): ContextTreeNode[] {
-		if (!element) return this.rootNode.children
-		return element.children
+	getChildren(node: ContextTreeNode | null): ContextTreeNode[] {
+		if (!node) return this.rootNode.children
+		return node.children
 	}
 
-	getTreeItem(element: ContextTreeNode) {
-		switch (element.type) {
+	getTreeItem(node: ContextTreeNode) {
+		switch (node.type) {
 			case "ROOT":
 				const treeItem = new TreeItem("Root", TreeItemCollapsibleState.Expanded)
 				return treeItem
-			case "EDITABLE_LIST": {
-				const treeItem = new TreeItem("Editable", TreeItemCollapsibleState.Expanded)
-				return treeItem
-			}
-			case "READONLY_LIST": {
-				const treeItem = new TreeItem("Readonly", TreeItemCollapsibleState.Expanded)
-				return treeItem
-			}
-			case "SUGGESTED_LIST": {
-				const treeItem = new TreeItem("Suggested", TreeItemCollapsibleState.Expanded)
-				return treeItem
-			}
-			case "EDITABLE_FILE":
-			case "READONLY_FILE":
-			case "SUGGESTED_FILE": {
+			case "FOLDER": {
+				const labels = {
+					EDITABLE: "Editable",
+					READONLY: "Readonly",
+					SUGGESTED: "Suggested"
+				}
 				const treeItem = new TreeItem(
-					nova.path.basename(element.absoluteFilePath),
+					labels[node.category],
+					TreeItemCollapsibleState.Expanded
+				)
+				return treeItem
+			}
+			case "FILE": {
+				const treeItem = new TreeItem(
+					nova.path.basename(node.absoluteFilePath),
 					TreeItemCollapsibleState.None
 				)
-				treeItem.tooltip = nova.workspace.relativizePath(element.absoluteFilePath)
-				treeItem.path = element.absoluteFilePath
+				treeItem.tooltip = nova.workspace.relativizePath(node.absoluteFilePath)
+				treeItem.path = node.absoluteFilePath
 				treeItem.command = "dev.ajcaldwell.aider.sidebar.context.double-click"
-				treeItem.contextValue = element.type
+				treeItem.contextValue = `${node.category}_FILE`
 				return treeItem
 			}
 		}
