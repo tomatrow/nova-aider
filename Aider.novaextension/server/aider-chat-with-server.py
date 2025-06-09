@@ -10,60 +10,60 @@ CACHE_DIR = '.aider.nova.cache.v1'
 MESSAGE_INPUT_FILE_PATH = os.path.join(CACHE_DIR, "messages.json")
 CODER_STATE_FILE_PATH = os.path.join(CACHE_DIR, "coder.json")
 
-class AiderServer:
-    def __init__(self):
-        self.coder = main(return_coder=True)
-        self.last_modified = 0
-        self.watcher_thread = None
+coder = main(return_coder=True)
+messages_file_last_modified = 0
+watcher_thread = None
 
-    def run(self, messages):
-        for message in messages:
-            try:
-                self.coder.run_one(message, True)
-            except SwitchCoder as switch:
-                io = self.coder.io
-                kwargs = dict(io=io, from_coder=self.coder)
-                kwargs.update(switch.kwargs)
-                self.coder = Coder.create(**kwargs)
-        os.makedirs(CACHE_DIR, exist_ok=True)
-        coder_state = { 
-            "abs_fnames": list(self.coder.abs_fnames),
-            "abs_read_only_fnames": list(self.coder.abs_read_only_fnames)
-        }
-        with open(CODER_STATE_FILE_PATH, 'w') as f:
-            json.dump(coder_state, f, indent=2)
+def run_messages(messages):
+    global coder
+    for message in messages:
+        try:
+            coder.run_one(message, True)
+        except SwitchCoder as switch:
+            io = coder.io
+            kwargs = dict(io=io, from_coder=coder)
+            kwargs.update(switch.kwargs)
+            coder = Coder.create(**kwargs)
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    coder_state = { 
+        "abs_fnames": list(coder.abs_fnames),
+        "abs_read_only_fnames": list(coder.abs_read_only_fnames)
+    }
+    with open(CODER_STATE_FILE_PATH, 'w') as f:
+        json.dump(coder_state, f, indent=2)
 
-    def watch_message_file(self):
-        while True:
-            try:
-                if not os.path.exists(MESSAGE_INPUT_FILE_PATH):
-                    continue
+def watch_messages_file():
+    global messages_file_last_modified
+    while True:
+        try:
+            if not os.path.exists(MESSAGE_INPUT_FILE_PATH):
+                continue
 
-                current_modified = os.path.getmtime(MESSAGE_INPUT_FILE_PATH)
-                if current_modified <= self.last_modified:
-                    continue
-                self.last_modified = current_modified
+            current_modified = os.path.getmtime(MESSAGE_INPUT_FILE_PATH)
+            if current_modified <= messages_file_last_modified:
+                continue
+            messages_file_last_modified = current_modified
 
-                with open(MESSAGE_INPUT_FILE_PATH, 'r') as f:
-                    content = f.read().strip()
-                if not content:
-                    continue
+            with open(MESSAGE_INPUT_FILE_PATH, 'r') as f:
+                content = f.read().strip()
+            if not content:
+                continue
 
-                messages = json.loads(content)
-                open(MESSAGE_INPUT_FILE_PATH, 'w').close()
-                self.coder.io.interrupt_input()
-                self.run(messages)
-            except Exception:
-                pass
-            time.sleep(0.05) # 50ms
+            messages = json.loads(content)
+            open(MESSAGE_INPUT_FILE_PATH, 'w').close()
+            coder.io.interrupt_input()
+            run_messages(messages)
+        except Exception:
+            pass
+        time.sleep(0.05) # 50ms
 
-    def start(self):
-        self.watcher_thread = threading.Thread(target=self.watch_message_file, daemon=True)
-        self.watcher_thread.start()
+def main():
+    global watcher_thread
+    watcher_thread = threading.Thread(target=watch_messages_file, daemon=True)
+    watcher_thread.start()
 
-        while True:
-            message = self.coder.get_input()
-            self.run([message])
+    while True:
+        message = coder.get_input()
+        run_messages([message])
 
-server = AiderServer()
-server.start()
+main()
