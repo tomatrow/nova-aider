@@ -58,7 +58,7 @@
 						{
 							"title": "Drop",
 							"command": "dev.ajcaldwell.aider.sidebar.context.drop",
-							"when": "viewItem === 'EDITABLE_FILE' || viewItem === 'READONLY_FILE'"
+							"when": "viewItem === 'EDITABLE_FILE' || viewItem === 'READONLY_FILE' || viewItem === 'SNIPPET'"
 						},
 						{
 							"title": "Move to Readonly",

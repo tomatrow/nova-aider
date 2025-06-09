@@ -1,4 +1,8 @@
-import { ContextTreeDataProvider, type ContextTreeNode } from "./ContextTreeDataProvider"
+import {
+	ContextTreeDataProvider,
+	type ContextTreeNode,
+	type ContextTreeNodeData
+} from "./ContextTreeDataProvider"
 import { isSameSet, isTruthy } from "./utility"
 import { watchTextDocumentPaths, getTextDocumentPaths } from "./nova-utility"
 import { listGitIgnoredFiles } from "./git"
@@ -18,11 +22,12 @@ let coder: AiderCoderState = {
 	abs_read_only_fnames: [],
 	edit_format: "code"
 }
+let novaSnippets: (ContextTreeNodeData & { type: "SNIPPET" })[] = []
 
 async function refreshGitIgnoredFiles() {
 	try {
 		gitIgnoredFiles = new Set(await listGitIgnoredFiles())
-		contextTreeDataProvider.update(coder, textDocumentPaths, gitIgnoredFiles)
+		contextTreeDataProvider.update(coder, textDocumentPaths, gitIgnoredFiles, novaSnippets)
 		await contextTreeView.reload()
 	} catch (error) {
 		console.error(error)
@@ -39,7 +44,7 @@ async function handleCoderChange(newCoder: AiderCoderState) {
 	}
 
 	coder = newCoder
-	contextTreeDataProvider.update(coder, getTextDocumentPaths(), gitIgnoredFiles)
+	contextTreeDataProvider.update(coder, getTextDocumentPaths(), gitIgnoredFiles, novaSnippets)
 	await contextTreeView.reload()
 }
 
@@ -89,7 +94,7 @@ export async function activate() {
 	coderCacheWatcher = watchCoderCache(handleCoderChange)
 	textDocumentPathsWatcher = watchTextDocumentPaths(newTextDocumentPaths => {
 		textDocumentPaths = newTextDocumentPaths
-		contextTreeDataProvider.update(coder, textDocumentPaths, gitIgnoredFiles)
+		contextTreeDataProvider.update(coder, textDocumentPaths, gitIgnoredFiles, novaSnippets)
 		contextTreeView.reload()
 	})
 
@@ -159,12 +164,46 @@ nova.commands.register("dev.ajcaldwell.aider.sidebar.context.double-click", () =
 	nova.commands.invoke("dev.ajcaldwell.aider.sidebar.context.open")
 })
 
-nova.commands.register("dev.ajcaldwell.aider.sidebar.context.open", () => {
+nova.commands.register("dev.ajcaldwell.aider.sidebar.context.open", async () => {
 	for (const node of contextTreeView.selection)
-		if (node.type === "FILE") nova.workspace.openFile(node.absoluteFilePath)
+		switch (node.type) {
+			case "FILE":
+				nova.workspace.openFile(node.absoluteFilePath)
+				break
+			case "SNIPPET": {
+				const textEditorPromise = nova.workspace.openFile(node.absoluteFilePath, {
+					line: node.lineRange[0]
+				})
+
+				if (contextTreeView.selection.length !== 1) break
+				const textEditor = await textEditorPromise
+				if (!textEditor) break
+
+				textEditor.addSelectionForRange(new Range(...node.characterRange))
+
+				break
+			}
+		}
 })
 
 nova.commands.register("dev.ajcaldwell.aider.sidebar.context.drop", () => {
+	const snippetsToDrop = contextTreeView.selection.filter(node => node.type === "SNIPPET")
+	if (snippetsToDrop.length) {
+		novaSnippets = novaSnippets.filter(
+			novaSnippet =>
+				!snippetsToDrop.some(
+					snippet =>
+						snippet.absoluteFilePath === novaSnippet.absoluteFilePath &&
+						snippet.text === novaSnippet.text &&
+						snippet.characterRange[0] === novaSnippet.characterRange[0] &&
+						snippet.characterRange[1] === novaSnippet.characterRange[1]
+				)
+		)
+
+		contextTreeDataProvider.update(coder, textDocumentPaths, gitIgnoredFiles, novaSnippets)
+		contextTreeView.reload()
+	}
+
 	const pathsToDrop = contextTreeView.selection
 		.map(
 			node =>
@@ -173,9 +212,7 @@ nova.commands.register("dev.ajcaldwell.aider.sidebar.context.drop", () => {
 				node.absoluteFilePath
 		)
 		.filter(isTruthy)
-	if (!pathsToDrop.length) return
-
-	writeMessages([`/drop ${pathsToDrop.join(" ")}`])
+	if (pathsToDrop.length) writeMessages([`/drop ${pathsToDrop.join(" ")}`])
 })
 
 nova.commands.register("dev.ajcaldwell.aider.sidebar.context.move_to_readonly", () => {
@@ -217,25 +254,26 @@ nova.commands.register("dev.ajcaldwell.aider.add_snippet_to_context", () => {
 	if (!activeTextEditor) return
 
 	const { selectedText, selectedRange } = activeTextEditor
-	const { path } = activeTextEditor.document
+	const { path, eol } = activeTextEditor.document
 	const guard = path && selectedText
 	if (!guard) return
 
 	const selectedLineRange = activeTextEditor.getLineRangeForRange(selectedRange)
+	const beginLine = activeTextEditor.document
+		.getTextInRange(new Range(0, selectedLineRange.start))
+		.split(eol).length
+	const endLine =
+		activeTextEditor.document.getTextInRange(new Range(0, selectedLineRange.end)).split(eol)
+			.length - 1
 
-	console.log(
-		"[dev.ajcaldwell.aider.add_snippet_to_context]",
-		JSON.stringify({
-			path,
-			text: selectedText,
-			characterRange: {
-				start: selectedRange.start,
-				end: selectedRange.end
-			},
-			lineRange: {
-				start: selectedLineRange.start,
-				end: selectedLineRange.end
-			}
-		})
-	)
+	novaSnippets.push({
+		type: "SNIPPET",
+		absoluteFilePath: path,
+		text: selectedText,
+		characterRange: [selectedRange.start, selectedRange.end],
+		lineRange: [beginLine, endLine]
+	})
+
+	contextTreeDataProvider.update(coder, textDocumentPaths, gitIgnoredFiles, novaSnippets)
+	contextTreeView.reload()
 })

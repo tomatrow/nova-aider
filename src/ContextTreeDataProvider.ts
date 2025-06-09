@@ -2,18 +2,35 @@ import { type AiderCoderState } from "./types"
 import { type TextDocumentPaths } from "./nova-utility"
 
 export type ContextTreeNodeData =
-	| { type: "ROOT" }
-	| { type: "FOLDER"; category: "EDITABLE" | "READONLY" | "SUGGESTED" }
+	| { type: "FOLDER"; name: string }
 	| { type: "FILE"; absoluteFilePath: string; category: "EDITABLE" | "READONLY" | "SUGGESTED" }
+	| {
+			type: "SNIPPET"
+			absoluteFilePath: string
+			characterRange: [begin: number, end: number]
+			lineRange: [begin: number, end: number]
+			text: string
+	  }
 
 export type ContextTreeNode = ContextTreeNodeData & { children: ContextTreeNode[] }
 
 function createContextTree(
 	coder: AiderCoderState,
 	editorPaths: TextDocumentPaths,
-	ignoredFiles: Set<string>
+	ignoredFiles: Set<string>,
+	snippets: Array<ContextTreeNodeData & { type: "SNIPPET" }>
 ): ContextTreeNode {
 	const children: ContextTreeNode[] = []
+
+	if (snippets.length) {
+		const snippetNodes = snippets.map(snippet => ({ ...snippet, children: [] }))
+
+		children.push({
+			type: "FOLDER",
+			name: "Snippets",
+			children: snippetNodes
+		})
+	}
 
 	if (coder.abs_fnames.length) {
 		const editableFileNodes: ContextTreeNode[] = coder.abs_fnames.map(absoluteFilePath => ({
@@ -23,13 +40,7 @@ function createContextTree(
 			children: []
 		}))
 
-		const editableListNode: ContextTreeNode = {
-			type: "FOLDER",
-			category: "EDITABLE",
-			children: editableFileNodes
-		}
-
-		children.push(editableListNode)
+		children.push({ type: "FOLDER", name: "Editable", children: editableFileNodes })
 	}
 
 	if (coder.abs_read_only_fnames.length) {
@@ -42,13 +53,7 @@ function createContextTree(
 			})
 		)
 
-		const readonlyListNode: ContextTreeNode = {
-			type: "FOLDER",
-			category: "READONLY",
-			children: readonlyFileNodes
-		}
-
-		children.push(readonlyListNode)
+		children.push({ type: "FOLDER", name: "Readonly", children: readonlyFileNodes })
 	}
 
 	const suggestablePaths = editorPaths.allTextDocumentPaths.filter(
@@ -66,23 +71,22 @@ function createContextTree(
 			children: []
 		}))
 
-		const suggestedListNode: ContextTreeNode = {
-			type: "FOLDER",
-			category: "SUGGESTED",
-			children: suggestedNodes
-		}
-
-		children.push(suggestedListNode)
+		children.push({ type: "FOLDER", name: "Suggested", children: suggestedNodes })
 	}
 
-	return { type: "ROOT", children }
+	return { type: "FOLDER", name: "ROOT", children }
 }
 
 export class ContextTreeDataProvider implements TreeDataProvider<ContextTreeNode> {
-	rootNode: ContextTreeNode = { type: "ROOT", children: [] }
+	rootNode: ContextTreeNode = { type: "FOLDER", name: "ROOT", children: [] }
 
-	update(coder: AiderCoderState, editorPaths: TextDocumentPaths, ignoredFiles: Set<string>) {
-		this.rootNode = createContextTree(coder, editorPaths, ignoredFiles)
+	update(
+		coder: AiderCoderState,
+		editorPaths: TextDocumentPaths,
+		ignoredFiles: Set<string>,
+		snippets: Array<ContextTreeNodeData & { type: "SNIPPET" }>
+	) {
+		this.rootNode = createContextTree(coder, editorPaths, ignoredFiles, snippets)
 	}
 
 	getChildren(node: ContextTreeNode | null): ContextTreeNode[] {
@@ -92,30 +96,33 @@ export class ContextTreeDataProvider implements TreeDataProvider<ContextTreeNode
 
 	getTreeItem(node: ContextTreeNode) {
 		switch (node.type) {
-			case "ROOT":
-				const treeItem = new TreeItem("Root", TreeItemCollapsibleState.Expanded)
-				return treeItem
 			case "FOLDER": {
-				const labels = {
-					EDITABLE: "Editable",
-					READONLY: "Readonly",
-					SUGGESTED: "Suggested"
-				}
-				const treeItem = new TreeItem(
-					labels[node.category],
-					TreeItemCollapsibleState.Expanded
-				)
-				return treeItem
+				return new TreeItem(node.name, TreeItemCollapsibleState.Expanded)
 			}
 			case "FILE": {
 				const treeItem = new TreeItem(
 					nova.path.basename(node.absoluteFilePath),
 					TreeItemCollapsibleState.None
 				)
+
 				treeItem.tooltip = nova.workspace.relativizePath(node.absoluteFilePath)
 				treeItem.path = node.absoluteFilePath
 				treeItem.command = "dev.ajcaldwell.aider.sidebar.context.double-click"
 				treeItem.contextValue = `${node.category}_FILE`
+
+				return treeItem
+			}
+			case "SNIPPET": {
+				const treeItem = new TreeItem(
+					`${nova.path.basename(node.absoluteFilePath)} (${node.lineRange[0]} - ${node.lineRange[1]})`,
+					TreeItemCollapsibleState.None
+				)
+
+				treeItem.tooltip = `${nova.workspace.relativizePath(node.absoluteFilePath)} (${node.lineRange[0]} - ${node.lineRange[1]})`
+				treeItem.path = node.absoluteFilePath
+				treeItem.command = "dev.ajcaldwell.aider.sidebar.context.double-click"
+				treeItem.contextValue = "SNIPPET"
+
 				return treeItem
 			}
 		}
