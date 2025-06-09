@@ -39,27 +39,26 @@ class AiderServer:
     def watch_message_file(self):
         while True:
             try:
-                if os.path.exists(MESSAGE_INPUT_FILE_PATH):
-                    current_modified = os.path.getmtime(MESSAGE_INPUT_FILE_PATH)
-                    if current_modified > self.last_modified:
-                        self.last_modified = current_modified
-                        with open(MESSAGE_INPUT_FILE_PATH, 'r') as f:
-                            content = f.read().strip()
-                        if content:
-                            try:
-                                messages = json.loads(content)
-                                if isinstance(messages, list):
-                                    open(MESSAGE_INPUT_FILE_PATH, 'w').close()
-                                    self.coder.io.interrupt_input()
-                                    self.run(messages)
-                                else:
-                                    print(f"Messages file content is not a list: {type(messages)}")
-                            except json.JSONDecodeError as e:
-                                print(f"Error parsing messages JSON: {e}")
-                time.sleep(0.05) # 50ms
-            except Exception as e:
-                print(f"Error watching message file: {e}")
-                time.sleep(1)
+                if not os.path.exists(MESSAGE_INPUT_FILE_PATH):
+                    continue
+
+                current_modified = os.path.getmtime(MESSAGE_INPUT_FILE_PATH)
+                if current_modified <= self.last_modified:
+                    continue
+                self.last_modified = current_modified
+
+                with open(MESSAGE_INPUT_FILE_PATH, 'r') as f:
+                    content = f.read().strip()
+                if not content:
+                    continue
+
+                messages = json.loads(content)
+                open(MESSAGE_INPUT_FILE_PATH, 'w').close()
+                self.coder.io.interrupt_input()
+                self.run(messages)
+            except Exception:
+                pass
+            time.sleep(0.05) # 50ms
 
     def start(self):
         self.watcher_thread = threading.Thread(target=self.watch_message_file, daemon=True)
