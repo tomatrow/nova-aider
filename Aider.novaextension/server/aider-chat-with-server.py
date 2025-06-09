@@ -16,12 +16,6 @@ class AiderServer:
         self.last_modified = 0
         self.watcher_thread = None
 
-    def get_coder_state(self):
-        return { 
-            "abs_fnames": list(self.coder.abs_fnames),
-            "abs_read_only_fnames": list(self.coder.abs_read_only_fnames)
-        }
-
     def run(self, messages):
         for message in messages:
             try:
@@ -32,7 +26,10 @@ class AiderServer:
                 kwargs.update(switch.kwargs)
                 self.coder = Coder.create(**kwargs)
         os.makedirs(CACHE_DIR, exist_ok=True)
-        coder_state = self.get_coder_state()
+        coder_state = { 
+            "abs_fnames": list(self.coder.abs_fnames),
+            "abs_read_only_fnames": list(self.coder.abs_read_only_fnames)
+        }
         with open(CODER_STATE_FILE_PATH, 'w') as f:
             json.dump(coder_state, f, indent=2)
 
