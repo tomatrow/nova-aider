@@ -10,6 +10,7 @@ export type ContextTreeNodeData =
 			characterRange: [begin: number, end: number]
 			lineRange: [begin: number, end: number]
 			text: string
+			syntax?: string
 	  }
 
 export type ContextTreeNode = ContextTreeNodeData & { children: ContextTreeNode[] }

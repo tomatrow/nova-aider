@@ -23,6 +23,39 @@ let coder: AiderCoderState = {
 }
 let novaSnippets: (ContextTreeNodeData & { type: "SNIPPET" })[] = []
 
+function getSelectedSnippet() {
+	const activeTextEditor = nova.workspace.activeTextEditor
+	if (!activeTextEditor) return
+
+	const { selectedText, selectedRange } = activeTextEditor
+	const { path, eol, syntax } = activeTextEditor.document
+	const guard = path && selectedText
+	if (!guard) return
+
+	const selectedLineRange = activeTextEditor.getLineRangeForRange(selectedRange)
+	const beginLine = activeTextEditor.document
+		.getTextInRange(new Range(0, selectedLineRange.start))
+		.split(eol).length
+	const endLine =
+		activeTextEditor.document.getTextInRange(new Range(0, selectedLineRange.end)).split(eol)
+			.length - 1
+
+	const snippet = {
+		type: "SNIPPET",
+		absoluteFilePath: path,
+		text: selectedText,
+		characterRange: [selectedRange.start, selectedRange.end],
+		lineRange: [beginLine, endLine],
+		syntax: syntax ?? undefined
+	} satisfies ContextTreeNodeData & { type: "SNIPPET" }
+
+	return snippet
+}
+
+function snippetToContextText(snippet: ContextTreeNodeData & { type: "SNIPPET" }) {
+	return `<snippet fileName="${snippet.absoluteFilePath}" language="${snippet.syntax}" lineRange="${snippet.lineRange[0]}-${snippet.lineRange[1]}">\n${snippet.text}\n</snippet>`
+}
+
 async function refreshGitIgnoredFiles() {
 	try {
 		gitIgnoredFiles = new Set(await listGitIgnoredFiles())
@@ -106,23 +139,13 @@ export function deactivate() {
 }
 
 nova.commands.register("dev.ajcaldwell.aider.chat_with_selection", () => {
-	const { activeTextEditor } = nova.workspace
-	if (!activeTextEditor) return
-
-	const { document, selectedRange } = activeTextEditor
-	const { path, syntax } = document
-
-	const guard = path && !selectedRange.empty
-	if (!guard) return
-
-	const selectedLineRange = activeTextEditor.getLineRangeForRange(selectedRange)
-	const textInSelectedLineRange = activeTextEditor.getTextInRange(selectedLineRange)
-	const snippet = `<snippet fileName="${path}" language="${syntax}" lineRange="${selectedLineRange.start}-${selectedLineRange.end}">\n${textInSelectedLineRange}\n</snippet>`
+	const selectedSnippet = getSelectedSnippet()
+	if (!selectedSnippet) return
 
 	nova.workspace.showInputPanel(
 		`Chat with ${nova.path.basename(
-			path
-		)} (${selectedLineRange.start} - ${selectedLineRange.end})`,
+			selectedSnippet.absoluteFilePath
+		)} (${selectedSnippet.lineRange[0]} - ${selectedSnippet.lineRange[1]})`,
 		{
 			label: "Command",
 			placeholder: "Aider command",
@@ -135,10 +158,19 @@ nova.commands.register("dev.ajcaldwell.aider.chat_with_selection", () => {
 
 			const messages: string[] = []
 
-			if (![...coder.abs_fnames, ...coder.abs_read_only_fnames].includes(path))
-				messages.push(`/add ${path}`)
+			if (
+				![...coder.abs_fnames, ...coder.abs_read_only_fnames].includes(
+					selectedSnippet.absoluteFilePath
+				)
+			)
+				messages.push(`/add ${selectedSnippet.absoluteFilePath}`)
 
-			messages.push(`${input ?? ""}\n${snippet}`)
+			let mainMessage = `${input ?? ""}\nSelected Snippet: ${snippetToContextText(selectedSnippet)}`
+
+			if (novaSnippets.length)
+				mainMessage += `\nThe following snippets are also available:\n${novaSnippets.map(snippetToContextText).join("\n")}`
+
+			messages.push(mainMessage)
 
 			writeMessages(messages)
 		}
@@ -246,31 +278,10 @@ nova.commands.register("dev.ajcaldwell.aider.refresh-git-ignored", () => {
 })
 
 nova.commands.register("dev.ajcaldwell.aider.add_snippet_to_context", () => {
-	console.log("[dev.ajcaldwell.aider.add_snippet_to_context]")
+	const snippet = getSelectedSnippet()
+	if (!snippet) return
 
-	const activeTextEditor = nova.workspace.activeTextEditor
-	if (!activeTextEditor) return
-
-	const { selectedText, selectedRange } = activeTextEditor
-	const { path, eol } = activeTextEditor.document
-	const guard = path && selectedText
-	if (!guard) return
-
-	const selectedLineRange = activeTextEditor.getLineRangeForRange(selectedRange)
-	const beginLine = activeTextEditor.document
-		.getTextInRange(new Range(0, selectedLineRange.start))
-		.split(eol).length
-	const endLine =
-		activeTextEditor.document.getTextInRange(new Range(0, selectedLineRange.end)).split(eol)
-			.length - 1
-
-	novaSnippets.push({
-		type: "SNIPPET",
-		absoluteFilePath: path,
-		text: selectedText,
-		characterRange: [selectedRange.start, selectedRange.end],
-		lineRange: [beginLine, endLine]
-	})
+	novaSnippets.push(snippet)
 
 	contextTreeDataProvider.update(coder, textDocumentPaths, gitIgnoredFiles, novaSnippets)
 	contextTreeView.reload()
