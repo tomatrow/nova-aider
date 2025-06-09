@@ -6,13 +6,6 @@ export function isTruthy<T>(value: T): value is Exclude<T, false | 0 | "" | null
 	return !!value
 }
 
-export function isSameSet<T>(array: Iterable<T>, otherArray: Iterable<T>) {
-	const set = new Set(array)
-	const otherSet = new Set(otherArray)
-
-	if (set.size !== otherSet.size) return false
-
-	for (const value of set) if (!otherSet.has(value)) return false
-
-	return true
+export function isSameSet<T>(setLike: Iterable<T>, otherSetLike: Iterable<T>) {
+	return new Set(setLike).symmetricDifference(new Set(otherSetLike)).size === 0
 }
