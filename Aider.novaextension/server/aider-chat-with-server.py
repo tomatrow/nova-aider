@@ -1,10 +1,10 @@
 from aider.commands import SwitchCoder
 from aider.coders import Coder
 from aider.main import main
+from watchfiles import watch
 import threading
 import json
 import os
-import time
 
 CACHE_DIR = '.aider.nova.cache.v1'
 MESSAGE_INPUT_FILE_PATH = os.path.join(CACHE_DIR, "messages.json")
@@ -32,32 +32,42 @@ def run_messages(messages):
     with open(CODER_STATE_FILE_PATH, 'w') as f:
         json.dump(coder_state, f, indent=2)
 
-def watch_messages_file():
+def handle_messages_file():
     global messages_file_last_modified
-    while True:
+    try:
+        if not os.path.exists(MESSAGE_INPUT_FILE_PATH):
+            return
+
+        current_modified = os.path.getmtime(MESSAGE_INPUT_FILE_PATH)
+        if current_modified <= messages_file_last_modified:
+            return
+        messages_file_last_modified = current_modified
+
+        with open(MESSAGE_INPUT_FILE_PATH, 'r') as f:
+            content = f.read().strip()
+        if not content:
+            return
+
+        messages = json.loads(content)
+        coder.io.interrupt_input()
+        run_messages(messages)
+    except Exception as e:
+        print(f"Error handling messages file {e}")
+    finally:
         try:
-            if not os.path.exists(MESSAGE_INPUT_FILE_PATH):
-                continue
+            with open(MESSAGE_INPUT_FILE_PATH, 'w') as f:
+                pass
+        except Exception as e:
+            print(f"Error clearing messages file {e}")
 
-            current_modified = os.path.getmtime(MESSAGE_INPUT_FILE_PATH)
-            if current_modified <= messages_file_last_modified:
-                continue
-            messages_file_last_modified = current_modified
+def watch_messages_file():
+    os.makedirs(CACHE_DIR, exist_ok=True)
 
-            with open(MESSAGE_INPUT_FILE_PATH, 'r') as f:
-                content = f.read().strip()
-            if not content:
-                continue
+    handle_messages_file()
+    for _ in watch(MESSAGE_INPUT_FILE_PATH):
+        handle_messages_file()
 
-            messages = json.loads(content)
-            open(MESSAGE_INPUT_FILE_PATH, 'w').close()
-            coder.io.interrupt_input()
-            run_messages(messages)
-        except Exception:
-            pass
-        time.sleep(0.05) # 50ms
-
-def main():
+def begin():
     global watcher_thread
     watcher_thread = threading.Thread(target=watch_messages_file, daemon=True)
     watcher_thread.start()
@@ -66,4 +76,4 @@ def main():
         message = coder.get_input()
         run_messages([message])
 
-main()
+begin()
