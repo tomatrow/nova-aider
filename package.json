@@ -1,5 +1,5 @@
 {
-	"name": "aider-composer-nova",
+	"name": "aider-nova",
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.js",
@@ -10,7 +10,7 @@
 	"scripts": {
 		"build": "vite build",
 		"build:watch": "vite build --watch",
-		"build:install": "fish -c 'pnpm run build; and open Aider.novaextension/'"
+		"build:install": "pnpm run build; && open Aider.novaextension/"
 	},
 	"devDependencies": {
 		"@types/node": "^22.14.1",
