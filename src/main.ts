@@ -178,14 +178,14 @@ nova.commands.register("dev.ajcaldwell.aider.chat_with_selection", () => {
 })
 
 nova.commands.register("dev.ajcaldwell.aider.clip_aider_server_script", async () => {
-	const startServerCommand = `uv run --python python3.12 --with aider-chat '${nova.path.join(nova.extension.path, "server/aider-chat-with-server.py")}'`
+	const startServerCommand = `uv run --python python3.12 --with aider-chat '${nova.path.join(nova.extension.path, "nova-aider.py")}'`
 
 	await nova.clipboard.writeText(startServerCommand)
 
 	const notification = new NotificationRequest()
 
 	notification.title = "Copied to clipboard!"
-	notification.body = "Paste server into terminal emulator"
+	notification.body = "Paste script into terminal emulator"
 
 	await nova.notifications.add(notification)
 })
