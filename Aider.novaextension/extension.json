@@ -6,6 +6,8 @@
 	"version": "1.0",
 	"categories": ["commands", "sidebars"],
 	"main": "main.js",
+	"repository": "https://github.com/tomatrow/nova-aider",
+	"bugs": "https://github.com/tomatrow/nova-aider/issues",
 	"entitlements": {
 		"clipboard": true,
 		"process": true,
