@@ -10,7 +10,7 @@
 	"scripts": {
 		"build": "vite build",
 		"build:watch": "vite build --watch",
-		"build:install": "pnpm run build; && open Aider.novaextension/"
+		"build:install": "pnpm run build && open Aider.novaextension/"
 	},
 	"devDependencies": {
 		"@types/node": "^22.14.1",
