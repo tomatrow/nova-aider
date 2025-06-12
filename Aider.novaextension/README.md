@@ -31,7 +31,7 @@ Install [`uv`](https://github.com/astral-sh/uv) - Python package manager
 ```shell
 cd path/to/nova/project
 # paste command, e.g.:
-uv run --python python3.12 --with aider-chat '/Users/ajcaldwell/Library/Application Support/Nova/Extensions/dev.ajcaldwell.aider/server/aider-chat-with-server.py'
+uv run --python python3.12 --with aider-chat '/Users/ajcaldwell/Library/Application Support/Nova/Extensions/dev.ajcaldwell.aider/nova-aider.py'
 ```
 
 ## Usage
@@ -62,9 +62,10 @@ The extension provides a context tree in the sidebar showing:
 
 Available through Nova's Command Palette:
 
-- `Copy start script to clipboard` - Get the command to start the Aider server
-- `Add to context` (cmd-l) - Add snippet to aider context
 - `Chat with selection` (cmd-k) - Chat with aider about the selected text
+- `Add to context` (cmd-l) - Add snippet to aider context
+- `Copy start script to clipboard` - Get the command to start the Aider server
+- `Refresh gitignored files` - Update extension with currently ignored files
 
 ## Configuration
 
@@ -80,9 +81,3 @@ The extension automatically:
 
 - Check the [Aider documentation](https://aider.chat) for general usage
 - Report extension-specific issues on the project repository
-
-### Project Structure
-
-- `src/` - TypeScript source code
-- `Aider.novaextension/server/` - Python bridge
-- `scripts/` - Utility scripts
