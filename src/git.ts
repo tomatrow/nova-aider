@@ -1,19 +1,17 @@
 import { runAsync } from "./nova-utility"
 
-// git ls-files --others --ignored --exclude-standard
+/** git ls-files --others --ignored --exclude-standard */
 export async function listGitIgnoredFiles() {
 	try {
-		const runResult = await runAsync("/opt/homebrew/bin/git", {
-			cwd: nova.workspace.path!,
-			args: ["ls-files", "--others", "--ignored", "--exclude-standard"]
-		})
+		const cwd = nova.workspace.path!
+		const args = ["git", "ls-files", "--others", "--ignored", "--exclude-standard"]
+		const { code, stderr, stdout } = await runAsync("/usr/bin/env", { cwd, args })
+		if (code !== 0)
+			throw new Error(
+				`command '${["/usr/bin/env", ...args].join()}' failed with code '${code}' and stderr '${stderr}'`
+			)
 
-		if (runResult.stderr) {
-			console.error(runResult.stderr)
-			return
-		}
-
-		return runResult.stdout.split("\n").map(path => nova.path.join(nova.workspace.path!, path))
+		return stdout.split("\n").map(path => nova.path.join(cwd, path))
 	} catch (error) {
 		console.error(error)
 	}

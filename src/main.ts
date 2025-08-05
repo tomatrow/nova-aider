@@ -242,7 +242,9 @@ nova.commands.register("dev.ajcaldwell.aider.sidebar.context.drop", () => {
 				node.absoluteFilePath
 		)
 		.filter(isTruthy)
-	if (pathsToDrop.length) writeMessages([`/drop ${pathsToDrop.join(" ")}`])
+	if (!pathsToDrop.length) return
+
+	writeMessages([`/drop ${pathsToDrop.map(path => JSON.stringify(path)).join(" ")}`])
 })
 
 nova.commands.register("dev.ajcaldwell.aider.sidebar.context.move_to_readonly", () => {
@@ -256,7 +258,7 @@ nova.commands.register("dev.ajcaldwell.aider.sidebar.context.move_to_readonly", 
 		.filter(isTruthy)
 	if (!pathsToRead.length) return
 
-	writeMessages([`/read ${pathsToRead.join(" ")}`])
+	writeMessages([`/read ${pathsToRead.map(path => JSON.stringify(path)).join(" ")}`])
 })
 
 nova.commands.register("dev.ajcaldwell.aider.sidebar.context.move_to_editable", () => {
@@ -270,7 +272,7 @@ nova.commands.register("dev.ajcaldwell.aider.sidebar.context.move_to_editable", 
 		.filter(isTruthy)
 	if (!pathsToAdd.length) return
 
-	writeMessages([`/add ${pathsToAdd.join(" ")}`])
+	writeMessages([`/add ${pathsToAdd.map(path => JSON.stringify(path)).join(" ")}`])
 })
 
 nova.commands.register("dev.ajcaldwell.aider.refresh-git-ignored", () => {
