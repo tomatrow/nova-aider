@@ -3,7 +3,7 @@
 	"name": "Aider",
 	"organization": "AJ Caldwell",
 	"description": "Aider",
-	"version": "1.0",
+	"version": "1.1.1",
 	"categories": ["commands", "sidebars"],
 	"main": "main.js",
 	"repository": "https://github.com/tomatrow/nova-aider",
